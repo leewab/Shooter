@@ -1,0 +1,3 @@
+setx ANTHROPIC_AUTH_TOKEN 700e3d26effe414b88a65ab865a4cd0f.m7CbztUtQDr03GLY
+setx ANTHROPIC_BASE_URL https://open.bigmodel.cn/api/anthropic
+setx CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC 1

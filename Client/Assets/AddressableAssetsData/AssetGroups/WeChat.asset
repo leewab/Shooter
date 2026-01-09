@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: WeChat
+  m_EditorClassIdentifier: 
+  m_GroupName: WeChat
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 0b624fd6eccb84a498fe0d6079ece087
+  m_SerializeEntries:
+  - m_GUID: 13c262e4489278b47b9002f6a1d8151d
+    m_Address: Assets/Res/UI/UIGameMainPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 10be82512da56db4da7014f6c82efb58
+    m_Address: Assets/Res/UI/ItemFood.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5bfa962e0a19f284db0f499ecce7fa09
+    m_Address: Assets/Res/UI/UIGameOperPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4dd387461a653eb4f967a1935ebac57f
+    m_Address: Assets/Res/UI/UIRoot.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 511a1cfbfebdce0458a7f2f396b432eb
+    m_Address: Assets/Res/UI/ItemCooking.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 9a73b40975494054eb03186236149481, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d6edf9c947f210b49b0b1c82089b8db5, type: 2}
+    - {fileID: 11400000, guid: a13c3681999b53b40aac3b98446931b0, type: 2}

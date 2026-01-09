@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7101f2798d524778a3fbf1c5bcaf1724, type: 3}
+  m_Name: Game
+  m_EditorClassIdentifier: 
+  points:
+  - position: {x: -60, y: 60, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    tangent: {x: 1, y: 0, z: 0}
+    distanceFromStart: 0
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: 40, y: 60, z: 0}
+    rotation: {x: 0, y: 0, z: -0.70710677, w: 0.70710677}
+    tangent: {x: 0, y: -1, z: 0}
+    distanceFromStart: 100
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: 40, y: 40, z: 0}
+    rotation: {x: 0, y: 0, z: 1, w: -0.00000004371139}
+    tangent: {x: -1, y: 0, z: 0}
+    distanceFromStart: 120
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: -40, y: 40, z: 0}
+    rotation: {x: 0, y: 0, z: -0.70710677, w: 0.70710677}
+    tangent: {x: 0, y: -1, z: 0}
+    distanceFromStart: 200
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: -40, y: 20, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    tangent: {x: 1, y: 0, z: 0}
+    distanceFromStart: 220
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: 40, y: 20, z: 0}
+    rotation: {x: 0, y: 0, z: -0.973249, w: 0.22975287}
+    tangent: {x: -0.8944272, y: -0.4472136, z: 0}
+    distanceFromStart: 300
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  - position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: -0.973249, w: 0.22975287}
+    tangent: {x: -0.8944272, y: -0.4472136, z: 0}
+    distanceFromStart: 344.72137
+    scale: 1
+    isCurvePoint: 0
+    followTangent: 1
+    curveHandleForward: {x: 0, y: 0, z: 0}
+    curveHandleBack: {x: 0, y: 0, z: 0}
+  totalLength: 344.72137
+  segmentsPerCurve: 20
