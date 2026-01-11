@@ -1,11 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor.AddressableAssets;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -14,6 +13,8 @@ using Debug = UnityEngine.Debug;
 
 public class ResourceManager : MonoBehaviour
 {
+    private const string USE_ADDRESSABLES_KEY = "ResourceManager_UseAddressables";
+
     private static ResourceManager _instance;
 
     public static ResourceManager Instance
@@ -22,23 +23,63 @@ public class ResourceManager : MonoBehaviour
         {
             if (_instance == null)
             {
-                _instance = new ResourceManager();
+                GameObject go = new GameObject("[ResourceManager]");
+                _instance = go.AddComponent<ResourceManager>();
+                DontDestroyOnLoad(go);
             }
-            
             return _instance;
         }
     }
 
-    private Dictionary<string, AsyncOperationHandle> _loadedAssets = new Dictionary<string, AsyncOperationHandle>();
+    private bool _useAddressables;
+    private readonly Dictionary<string, UnityEngine.Object> _assetCache = new Dictionary<string, UnityEngine.Object>();
 
-    // 异步加载资源
-    public void LoadAssetAsync<T>(string assetKey, System.Action<T> onComplete)
+    public bool UseAddressables => _useAddressables;
+
+    private void Awake()
     {
-        if (string.IsNullOrEmpty(assetKey)) return;
-        
-        if (_loadedAssets.TryGetValue(assetKey, out var handle))
+#if UNITY_EDITOR
+        _useAddressables = PlayerPrefs.GetInt(USE_ADDRESSABLES_KEY, 1) == 1;
+#else
+        _useAddressables = true;
+#endif
+    }
+
+    private void OnDestroy()
+    {
+        ReleaseAllAssets();
+    }
+
+    #region Async Load
+
+    public void LoadAssetAsync<T>(string assetKey, Action<T> onComplete) where T : UnityEngine.Object
+    {
+        if (string.IsNullOrEmpty(assetKey))
         {
-            onComplete?.Invoke((T)handle.Result);
+            onComplete?.Invoke(null);
+            return;
+        }
+
+#if UNITY_EDITOR
+        if (_useAddressables)
+        {
+            LoadAssetAsyncAddressable(assetKey, onComplete);
+        }
+        else
+        {
+            T asset = LoadAssetAtPath<T>(assetKey);
+            onComplete?.Invoke(asset);
+        }
+#else
+        LoadAssetAsyncAddressable(assetKey, onComplete);
+#endif
+    }
+
+    private void LoadAssetAsyncAddressable<T>(string assetKey, Action<T> onComplete) where T : UnityEngine.Object
+    {
+        if (_assetCache.TryGetValue(assetKey, out var cachedAsset))
+        {
+            onComplete?.Invoke((T)cachedAsset);
             return;
         }
 
@@ -47,181 +88,242 @@ public class ResourceManager : MonoBehaviour
         {
             if (op.Status == AsyncOperationStatus.Succeeded)
             {
-                _loadedAssets[assetKey] = op;
+                _assetCache[assetKey] = op.Result;
                 onComplete?.Invoke(op.Result);
             }
             else
             {
-                Debug.LogError($"Failed to load asset: {assetKey}");
+                Debug.LogError($"[Addressables] Failed to load: {assetKey}");
+                onComplete?.Invoke(null);
             }
         };
     }
 
-    // 释放资源
-    public void ReleaseAsset(string assetKey)
+    #endregion
+
+    #region Sync Load
+
+    public T SyncLoad<T>(string assetKey, float timeout = 5f) where T : UnityEngine.Object
     {
-        if (_loadedAssets.TryGetValue(assetKey, out var handle))
-        {
-            Addressables.Release(handle);
-            _loadedAssets.Remove(assetKey);
-        }
-    }
+        if (string.IsNullOrEmpty(assetKey)) return null;
 
-    // 释放所有资源
-    public void ReleaseAllAssets()
-    {
-        foreach (var kvp in _loadedAssets)
+#if UNITY_EDITOR
+        if (_useAddressables)
         {
-            Addressables.Release(kvp.Value);
-        }
-        _loadedAssets.Clear();
-    }
-    
-    
- /// <summary>
-    /// 终极同步加载方法（解决所有超时和资源问题）
-    /// </summary>
-    public static T SyncLoad<T>(string assetKey, float timeout = 5f) where T : UnityEngine.Object
-    {
-        // 1. 深度验证Addressables系统
-        if (!AddressableAssetSettingsDefaultObject.SettingsExists)
-        {
-            Debug.LogError("[Addressables] 系统未初始化，请检查：\n" +
-                "1. 是否安装了Addressables包\n" +
-                "2. 是否初始化了AddressableAssetSettings");
-            return null;
-        }
-
-        // 2. 增强版资源Key验证
-        var (exists, location) = ValidateAssetKey<T>(assetKey);
-        if (!exists)
-        {
-            Debug.LogError($"[Addressables] 资源Key验证失败: {assetKey}\n" +
-                $"可能原因：\n" +
-                $"1. Key拼写错误\n" +
-                $"2. 资源未标记为Addressable\n" +
-                $"3. 资源未包含在构建中");
-            return null;
-        }
-
-        // 3. 创建带超时的加载任务
-        var loadTask = LoadAssetWithTimeout<T>(assetKey, timeout);
-        loadTask.Wait(); // 同步等待
-
-        // 4. 处理结果
-        if (loadTask.Result.success)
-        {
-            return loadTask.Result.asset;
+            return SyncLoadAddressable<T>(assetKey, timeout);
         }
         else
         {
-            Debug.LogError($"[Addressables] 加载失败: {assetKey}\n" +
-                $"错误类型: {loadTask.Result.errorType}\n" +
-                $"详细信息: {loadTask.Result.errorMessage}");
+            return LoadAssetAtPath<T>(assetKey);
+        }
+#else
+        return SyncLoadAddressable<T>(assetKey, timeout);
+#endif
+    }
+
+    private T SyncLoadAddressable<T>(string assetKey, float timeout) where T : UnityEngine.Object
+    {
+        if (_assetCache.TryGetValue(assetKey, out var cachedAsset))
+        {
+            return (T)cachedAsset;
+        }
+
+#if UNITY_EDITOR
+        if (!UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.SettingsExists)
+        {
+            Debug.LogError("[Addressables] System not initialized");
             return null;
         }
-    }
 
-    private static (bool exists, IResourceLocation location) ValidateAssetKey<T>(string assetKey) 
-        where T : UnityEngine.Object
-    {
-        foreach (var locator in Addressables.ResourceLocators)
+        var (exists, _) = ValidateAssetKey<T>(assetKey);
+        if (!exists)
         {
-            if (locator.Locate(assetKey, typeof(T), out var locations))
-            {
-                if (locations != null && locations.Count > 0)
-                {
-                    return (true, locations[0]);
-                }
-            }
+            Debug.LogError($"[Addressables] Key not found: {assetKey}");
+            return null;
         }
-        return (false, null);
-    }
-
-    private static async Task<(bool success, T asset, string errorType, string errorMessage)> 
-        LoadAssetWithTimeout<T>(string assetKey, float timeout) where T : UnityEngine.Object
-    {
-        var stopwatch = Stopwatch.StartNew();
-        AsyncOperationHandle<T> handle = default;
-        string errorType = "";
-        string errorMessage = "";
+#endif
 
         try
         {
-            // 1. 开始加载
-            handle = Addressables.LoadAssetAsync<T>(assetKey);
+            var loadTask = LoadAssetWithTimeout<T>(assetKey, timeout);
+            loadTask.Wait();
 
-            // 2. 等待完成或超时
-            while (!handle.IsDone)
+            if (loadTask.Result.success)
             {
-                if (stopwatch.Elapsed.TotalSeconds > timeout)
-                {
-                    errorType = "Timeout";
-                    errorMessage = $"超过最大等待时间 {timeout}秒";
-                    Addressables.Release(handle);
-                    return (false, default, errorType, errorMessage);
-                }
-                await Task.Yield();
-            }
-
-            // 3. 处理结果
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                return (true, handle.Result, "", "");
+                _assetCache[assetKey] = loadTask.Result.asset;
+                return loadTask.Result.asset;
             }
             else
             {
-                errorType = "LoadFailed";
-                errorMessage = handle.OperationException?.ToString() ?? "未知错误";
-                Addressables.Release(handle);
-                return (false, default, errorType, errorMessage);
+                Debug.LogError($"[Addressables] Load failed: {assetKey}, {loadTask.Result.errorType}");
+                return null;
             }
         }
         catch (Exception ex)
         {
-            errorType = "SystemException";
-            errorMessage = ex.ToString();
-            if (!handle.Equals(default))
+            Debug.LogError($"[Addressables] Exception: {ex.Message}");
+            return null;
+        }
+    }
+
+#if UNITY_EDITOR
+    private T LoadAssetAtPath<T>(string assetKey) where T : UnityEngine.Object
+    {
+        if (_assetCache.TryGetValue(assetKey, out var cachedAsset))
+        {
+            return (T)cachedAsset;
+        }
+
+        T asset = AssetDatabase.LoadAssetAtPath<T>(assetKey);
+        if (asset != null)
+        {
+            _assetCache[assetKey] = asset;
+        }
+        else
+        {
+            Debug.LogError($"[AssetDatabase] Failed to load: {assetKey}");
+        }
+        return asset;
+    }
+
+    private static (bool exists, IResourceLocation location) ValidateAssetKey<T>(string assetKey) where T : UnityEngine.Object
+    {
+        foreach (var locator in Addressables.ResourceLocators)
+        {
+            if (locator.Locate(assetKey, typeof(T), out var locations) && locations != null && locations.Count > 0)
+            {
+                return (true, locations[0]);
+            }
+        }
+        return (false, null);
+    }
+#endif
+
+    private static async Task<(bool success, T asset, string errorType)> LoadAssetWithTimeout<T>(string assetKey, float timeout) where T : UnityEngine.Object
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var handle = Addressables.LoadAssetAsync<T>(assetKey);
+
+        try
+        {
+            while (!handle.IsDone)
+            {
+                if (stopwatch.Elapsed.TotalSeconds > timeout)
+                {
+                    Addressables.Release(handle);
+                    return (false, default, "Timeout");
+                }
+                await Task.Yield();
+            }
+
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                return (true, handle.Result, "");
+            }
+            else
+            {
                 Addressables.Release(handle);
-            return (false, default, errorType, errorMessage);
+                return (false, default, "LoadFailed");
+            }
+        }
+        catch
+        {
+            Addressables.Release(handle);
+            return (false, default, "Exception");
         }
         finally
         {
             stopwatch.Stop();
         }
     }
-    
-    private Dictionary<string, GameObject> _GameObjectMap = new Dictionary<string, GameObject>();
+
+    #endregion
+
+    #region Release
+
+    public void ReleaseAsset(string assetKey)
+    {
+        if (string.IsNullOrEmpty(assetKey)) return;
+
+        if (_assetCache.TryGetValue(assetKey, out var asset))
+        {
+#if UNITY_EDITOR
+            if (_useAddressables)
+            {
+                Addressables.Release(asset);
+            }
+#else
+            Addressables.Release(asset);
+#endif
+            _assetCache.Remove(assetKey);
+        }
+    }
+
+    public void ReleaseAllAssets()
+    {
+#if UNITY_EDITOR
+        if (_useAddressables)
+        {
+            foreach (var asset in _assetCache.Values)
+            {
+                Addressables.Release(asset);
+            }
+        }
+#else
+        foreach (var asset in _assetCache.Values)
+        {
+            Addressables.Release(asset);
+        }
+#endif
+        _assetCache.Clear();
+    }
+
+    #endregion
+
+    #region Convenience Methods
+
+    private readonly Dictionary<string, GameObject> _prefabCache = new Dictionary<string, GameObject>();
+
     public GameObject GetPrefab(string path)
     {
         if (string.IsNullOrEmpty(path)) return null;
-        if (_GameObjectMap.TryGetValue(path, out GameObject obj))
+
+        if (_prefabCache.TryGetValue(path, out var prefab) && prefab != null)
         {
-            if (obj != null) return obj;
+            return prefab;
         }
-        
-        obj = SyncLoad<GameObject>(path);
-        _GameObjectMap.Add(path, obj);
-        return obj;
+
+        prefab = SyncLoad<GameObject>(path);
+        if (prefab != null)
+        {
+            _prefabCache[path] = prefab;
+        }
+        return prefab;
     }
-    
-    private Dictionary<string, Sprite> _SpriteMap = new Dictionary<string, Sprite>();
+
+    private readonly Dictionary<string, Sprite> _spriteCache = new Dictionary<string, Sprite>();
+
     public Sprite GetSprite(string name)
     {
         if (string.IsNullOrEmpty(name)) return null;
+
         if (!name.StartsWith("Assets/"))
         {
             name = $"Assets/Res/UI/{name}.png";
         }
-        
-        if (_SpriteMap.TryGetValue(name, out Sprite obj))
+
+        if (_spriteCache.TryGetValue(name, out var sprite) && sprite != null)
         {
-            if (obj != null) return obj;
+            return sprite;
         }
-        
-        obj = SyncLoad<Sprite>(name);
-        _SpriteMap.Add(name, obj);
-        return obj;
+
+        sprite = SyncLoad<Sprite>(name);
+        if (sprite != null)
+        {
+            _spriteCache[name] = sprite;
+        }
+        return sprite;
     }
-    
+
+    #endregion
 }

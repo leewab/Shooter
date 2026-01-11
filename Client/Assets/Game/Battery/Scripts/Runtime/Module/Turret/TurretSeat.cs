@@ -1,19 +1,21 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Gameplay
 {
     public class TurretSeat : MonoBehaviour
     {
+        [SerializeField] private GameObject _turretLock;
+
         private bool _isActive = false;
-        private bool _isOccupy = false;
+        public bool IsActive => _isActive;
         
-        [SerializeField]
-        private GameObject _turretLock;
+        private bool _isOccupy = false;
+        public bool IsOccupy => _isOccupy;
 
         public void SetActive(bool isActive)
         {
             this._isActive = isActive;
+            this.gameObject.SetActive(true);
             this._turretLock?.SetActive(!isActive);
         }
 
@@ -22,39 +24,25 @@ namespace Gameplay
             this._isOccupy = isOccupy;
         }
 
-        public bool SetTurret(TurretEntity turret)
+        public bool SetupTurret(TurretEntity turret)
         {
             if (!this._isActive)
             {
                 Debug.LogWarning("TurretSeat::SetTurret: Turret is not active.");
                 return false;
             }
-
-            turret.transform.SetParent(this.transform);
-            turret.transform.localPosition = Vector3.zero;
-            turret.SetActive(true);
-            turret.RemoveTurret();
-            turret.OnDeadEvent.RemoveListener(OnTurretDeadEvent);
-            turret.OnDeadEvent.AddListener(OnTurretDeadEvent);
+            
+            turret.SetupTurret(this.transform);
+            turret.OnDeadEvent?.RemoveListener(OnTurretDeadEvent);
+            turret.OnDeadEvent?.AddListener(OnTurretDeadEvent);
             SetOccupy(true);
             return true;
         }
 
-        public bool IsOccupy()
-        {
-            return this._isOccupy;
-        }
-
-        public bool IsActive()
-        {
-            return this._isActive;
-        }
-
-        private void OnTurretDeadEvent()
+        private void OnTurretDeadEvent(int index)
         {
             SetOccupy(false);
         }
-        
         
     }
 }

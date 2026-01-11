@@ -8,7 +8,7 @@ namespace Gameplay
     {
         #region Bullet
         
-        private const string BulletPrefabPath = "Assets/Res/Battery/GamePlay/Bullet.prefab";
+        private const string BulletPrefabPath = "Assets/Res/Game/Bullet.prefab";
         
         private Transform _bulletPool;
         public Transform BulletPool
@@ -50,13 +50,21 @@ namespace Gameplay
         {
             return GameObjectPool<BaseBullet>.Instance.GetObject(BulletPrefab, BulletPool, position, rotation);
         }
-        
-        
-        private static Dictionary<int, BulletConf> _BulletConf = new Dictionary<int, BulletConf>()
+
+        public void RecycleBullet(BaseBullet bullet)
+        {
+            GameObjectPool<BaseBullet>.Instance.RecycleObject(BulletPrefab, bullet);
+        }
+
+        #endregion
+
+        #region Config
+
+        private static Dictionary<int, ConfBullet> _BulletConf = new Dictionary<int, ConfBullet>()
         {
             {
                 0,
-                new BulletConf()
+                new ConfBullet()
                 {
                     Damage = 1, // 伤害
                     Speed = 150f, // 速度
@@ -78,7 +86,7 @@ namespace Gameplay
             },
             {
                 1,
-                new BulletConf()
+                new ConfBullet()
                 {
                     Damage = 1, // 伤害
                     Speed = 150f, // 速度
@@ -100,7 +108,7 @@ namespace Gameplay
             },
             {
                 2,
-                new BulletConf()
+                new ConfBullet()
                 {
                     Damage = 1, // 伤害
                     Speed = 150f, // 速度
@@ -122,7 +130,7 @@ namespace Gameplay
             },
             {
                 3,
-                new BulletConf()
+                new ConfBullet()
                 {
                     Damage = 1, // 伤害
                     Speed = 150f, // 速度
@@ -144,7 +152,7 @@ namespace Gameplay
             },
             {
                 4,
-                new BulletConf()
+                new ConfBullet()
                 {
                     Damage = 1, // 伤害
                     Speed = 150f, // 速度
@@ -166,7 +174,7 @@ namespace Gameplay
             }
         };
         
-        public BulletConf GetBulletConf(int id)
+        public ConfBullet GetBulletConf(int id)
         {
             return _BulletConf.GetValueOrDefault(id);
         }

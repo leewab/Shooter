@@ -45,7 +45,7 @@ namespace Gameplay
                 if (clip == null)
                 {
                     // 如果 GetSound 返回 null，尝试从资源加载
-                    const string audioPath = "Assets/Res/Battery/Audio/";
+                    const string audioPath = "Assets/Res/Audio/";
                     string fullPath = audioPath + soundName + ".wav";
 
 #if UNITY_EDITOR

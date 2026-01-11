@@ -29,7 +29,7 @@ namespace Gameplay
                     return Color.green;
                 case ColorType.Blue:
                     return Color.blue;
-                case  ColorType.Yellow:
+                case ColorType.Yellow:
                     return Color.yellow;
                 case ColorType.Orange:
                     return new Color(0.5f, 0.2f, 0.016f, 1);
@@ -39,10 +39,14 @@ namespace Gameplay
             
             return Color.white;
         }
+
+        public int GetRandomTurretId()
+        {
+            return Random.Range(0, 4);
+        }
         
         
-        
-        private const string TurretPrefabPath = "Assets/Res/Battery/GamePlay/Turret.prefab";
+        private const string TurretPrefabPath = "Assets/Res/Game/Turret.prefab";
         
         private GameObject _turretPrefab;
         public GameObject TurretPrefab
@@ -76,23 +80,18 @@ namespace Gameplay
             if (turret == null) return;
             GameObjectPool<BaseTurret>.Instance.RecycleObject(TurretPrefab, turret);
         }
-
-        public bool CheckColorType(ColorType type, ColorType  color)
-        {
-            return type == color;
-        }
         
-        private static Dictionary<int, TurretConf> _TurretConf = new Dictionary<int, TurretConf>()
+        private static Dictionary<int, ConfTurret> _TurretConf = new Dictionary<int, ConfTurret>()
         {
             {
                 0,
-                new TurretConf()
+                new ConfTurret()
                 {
                     Id = 0,
                     ColorType = ColorType.Red,
                     AttackCooldown = 1f,            // 攻击冷却时间
                     DamagePerShot = 1, // 每次攻击伤害
-                    MaxHitNum = 5, // 最大攻击数量
+                    MaxHitNum = 3, // 最大攻击数量
                     FireSound = "Fire",
                     BulletName = "Bullet",
                     // 发射效果配置
@@ -106,13 +105,13 @@ namespace Gameplay
             },
             {
                 1,
-                new TurretConf()
+                new ConfTurret()
                 {
                     Id = 1,
                     ColorType = ColorType.Green,
                     AttackCooldown = 1f, // 攻击冷却时间
                     DamagePerShot = 1, // 每次攻击伤害
-                    MaxHitNum = 5, // 最大攻击数量
+                    MaxHitNum = 3, // 最大攻击数量
                     FireSound = "Fire",
                     BulletName = "Bullet",
                     // 发射效果配置
@@ -125,13 +124,13 @@ namespace Gameplay
                 }
             },
             {
-                2, new TurretConf()
+                2, new ConfTurret()
                 {
                     Id = 2,
                     ColorType = ColorType.Blue,
                     AttackCooldown = 1f, // 攻击冷却时间
                     DamagePerShot = 1, // 每次攻击伤害
-                    MaxHitNum = 5, // 最大攻击数量
+                    MaxHitNum = 3, // 最大攻击数量
                     FireSound = "Fire",
                     BulletName = "Bullet",
                     // 发射效果配置
@@ -144,13 +143,13 @@ namespace Gameplay
                 }
             },
             {
-                3, new TurretConf()
+                3, new ConfTurret()
                 {
                     Id = 3,
                     ColorType = ColorType.Yellow,
                     AttackCooldown = 1f, // 攻击冷却时间
                     DamagePerShot = 1, // 每次攻击伤害
-                    MaxHitNum = 5, // 最大攻击数量
+                    MaxHitNum = 3, // 最大攻击数量
                     FireSound = "Fire",
                     BulletName = "Bullet",
                     // 发射效果配置
@@ -163,13 +162,13 @@ namespace Gameplay
                 }
             },
             {
-                4, new TurretConf()
+                4, new ConfTurret()
                 {
                     Id = 4,
                     ColorType = ColorType.Orange,
                     AttackCooldown = 1f, // 攻击冷却时间
                     DamagePerShot = 1, // 每次攻击伤害
-                    MaxHitNum = 5, // 最大攻击数量
+                    MaxHitNum = 3, // 最大攻击数量
                     FireSound = "Fire",
                     BulletName = "Bullet",
                     // 发射效果配置
@@ -183,7 +182,7 @@ namespace Gameplay
             }
         };
         
-        public TurretConf GetTurretConf(int id)
+        public ConfTurret GetTurretConf(int id)
         {
             return _TurretConf.GetValueOrDefault(id);
         }

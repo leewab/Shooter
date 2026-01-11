@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using Gameplay;
 using UnityEngine;
 
 /// <summary>
 /// 单例泛型对象池（仅支持继承MonoBehaviour的Unity对象）
 /// </summary>
 /// <typeparam name="T">待缓存的对象类型，必须继承MonoBehaviour</typeparam>
-public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : MonoBehaviour
+public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMonoObject
 {
     
     // 缓存池：键为预制体，值为该预制体对应的空闲对象队列
@@ -62,6 +63,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : MonoBeha
             targetObj = objectQueue.Dequeue();
             if (targetObj != null)
             {
+                Debug.Log("对象池去除 " + prefab.name + _poolDict[prefab].Count);
                 var objTransform = targetObj.transform;
                 objTransform.SetParent(parent);
                 objTransform.position = position;
@@ -108,8 +110,9 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : MonoBeha
         // 3. 重置对象状态并回收
         var objTransform = obj.transform;
         objTransform.SetParent(_poolRoot); // 归位到对象池根节点
-        obj.gameObject.SetActive(false);  // 隐藏对象
-        _poolDict[prefab].Enqueue(obj);   // 加入缓存队列
+        obj.gameObject.SetActive(false);   // 隐藏对象
+        _poolDict[prefab].Enqueue(obj);    // 加入缓存队列
+        Debug.Log("对象池回收 " + prefab.name + _poolDict[prefab].Count);
     }
 
     /// <summary>
@@ -126,6 +129,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : MonoBeha
                 var obj = objectQueue.Dequeue();
                 if (obj != null)
                 {
+                    obj.Destroy();
                     Object.Destroy(obj.gameObject);
                 }
             }

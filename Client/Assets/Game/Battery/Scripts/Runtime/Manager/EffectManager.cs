@@ -8,7 +8,7 @@ namespace Gameplay
     {
         #region Effect
 
-        private const string EffectPrefabPath = "Assets/Res/Battery/GamePlay/Effects/";
+        private const string EffectPrefabPath = "Assets/Res/Game/Effects/";
 
         private Transform _effectPool;
         public Transform EffectPool

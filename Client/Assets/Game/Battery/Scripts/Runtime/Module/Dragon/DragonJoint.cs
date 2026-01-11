@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 using Gameplay;
-using UnityEngine.Serialization;
 
 public enum DragonJointType
 {
@@ -14,7 +13,7 @@ public class DragonJointData
 {
     public DragonJointType JointType;
     public ColorType ColorType;
-    public float MaxHealth;
+    public ConfDragonJoint ConfDragonJoint;
     public int JointIndex;
 }
 
@@ -24,7 +23,6 @@ public class DragonJoint : MonoBehaviour
     public UnityEvent<int> onDestroyed;
     public UnityEvent<float> onHealthChanged;
 
-    
     private GameObject destroyEffect;
     private GameObject damageEffect;
     private AudioClip damageSound;
@@ -37,20 +35,18 @@ public class DragonJoint : MonoBehaviour
     
     // 私有变量
     private float _currentHealth = 0;
-    private Color currentColor;
-    private ColorType colorType;
+    private Color _currentColor;
+    private ColorType _colorType;
     private bool _isAlive = true;
-    private DragonController controller;
     private DragonJointData _jointData;
+    private ConfDragonJoint _confDragonJoint;
     
     private void Awake()
     {
         jointCollider = GetComponent<Collider2D>();
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-        
-        // 查找控制器
-        controller = GetComponentInParent<DragonController>();
+
         gameObject.tag = "DragonJoint";
         gameObject.layer = LayerMask.NameToLayer("Game");
     }
@@ -59,7 +55,8 @@ public class DragonJoint : MonoBehaviour
     {
         _isAlive = true;
         _jointData = jointData;
-        _currentHealth = jointData.MaxHealth;
+        _confDragonJoint = jointData.ConfDragonJoint;
+        _currentHealth = _confDragonJoint?.Health ?? 0;
         JointIndex = jointData.JointIndex;
         SetColorType(jointData.ColorType);
     }
@@ -67,11 +64,11 @@ public class DragonJoint : MonoBehaviour
     // 设置颜色类型
     public void SetColorType(ColorType newType)
     {
-        colorType = newType;
-        currentColor = TurretManager.Instance.GetColor(colorType);
+        _colorType = newType;
+        _currentColor = TurretManager.Instance.GetColor(_colorType);
         if (spriteRenderer != null)
         {
-            spriteRenderer.color = currentColor;
+            spriteRenderer.color = _currentColor;
         }
     }
     
@@ -133,7 +130,7 @@ public class DragonJoint : MonoBehaviour
     // 获取颜色类型
     public ColorType GetColorType()
     {
-        return colorType;
+        return _colorType;
     }
     
     // 是否存活

@@ -1,10 +1,7 @@
-﻿using UnityEngine;
-
-namespace Gameplay
+﻿namespace Gameplay
 {
-    public abstract class BaseBullet : MonoBehaviour
+    public abstract class BaseBullet : PoolMonoObject
     {
-        public abstract void SetupBullet(int id, ColorType colorType, Vector2 direction);
 
     }
 }

@@ -5,18 +5,18 @@ namespace Gameplay
 {
     public class BulletEntity : BaseBullet
     {
-        private BulletConf _bulletConfig;
+        private ConfBullet _confBulletConfig;
         private ColorType _bulletColor;
 
-        public SpriteRenderer spriteRenderer;
+        [SerializeField] private SpriteRenderer spriteRenderer;
 
         // 私有变量
-        private Vector2 moveDirection; // 固定的移动方向
-        private Vector2 startPosition; // 发射起始位置
+        private Vector2 _moveDirection; // 固定的移动方向
+        private Vector2 _startPosition; // 发射起始位置
         private Rigidbody2D rb;
         private LayerMask obstacleLayer;
         private LayerMask targetLayer;
-        private bool isStart = false;
+        private bool _isStart = false;
         private Tween scaleTween; // 缩放动画 Tween
 
         private void Awake()
@@ -27,36 +27,36 @@ namespace Gameplay
 
             // 设置层级
             obstacleLayer = LayerMask.GetMask("Obstacle", "Ground", "Default");
-            targetLayer = LayerMask.GetMask("Game", "Default");
+            targetLayer = LayerMask.GetMask("Game");
 
             // 设置标签
             gameObject.tag = "Bullet";
         }
-
-        // 设置子弹
-        public override void SetupBullet(int id, ColorType colorType, Vector2 direction)
+        
+        private void Update()
         {
-            _bulletColor = colorType;
-            _bulletConfig = BulletManager.Instance.GetBulletConf(id);
-            startPosition = transform.position; // 记录发射位置
-            moveDirection = direction.normalized;
+            if (!_isStart) return;
+            // 检查是否超出最大飞行距离
+            float travelDistance = Vector2.Distance(_startPosition, transform.position);
+            if (travelDistance >= _confBulletConfig.MaxTravelDistance)
+            {
+                Debug.Log("远距离销毁");
+                DestroyBullet();
+            }
+        }
 
-            // 应用初始速度
+        private void FixedUpdate()
+        {
+            if (!_isStart) return;
+            // 保持直线运动
             if (rb != null)
             {
-                rb.velocity = moveDirection * _bulletConfig.Speed;
+                // 确保子弹保持固定方向和速度
+                if (rb.velocity.magnitude < _confBulletConfig.Speed * 0.9f)
+                {
+                    rb.velocity = _moveDirection * _confBulletConfig.Speed;
+                }
             }
-
-            UpdateVisuals();
-
-            // 设置初始旋转
-            float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
-
-            // 发射缩放动画 - 使用 DOTween
-            PlayLaunchScaleAnimation();
-
-            isStart = true;
         }
 
         // 发射缩放动画 - 使用 DOTween
@@ -66,41 +66,15 @@ namespace Gameplay
             scaleTween?.Kill();
 
             // 设置初始缩放
-            transform.localScale = Vector3.one * _bulletConfig.StartScale;
+            transform.localScale = Vector3.one * _confBulletConfig.StartScale;
 
             // 使用 DOTween 播放缩放动画
             scaleTween = transform
-                .DOScale(Vector3.one, _bulletConfig.ScaleDuration)
+                .DOScale(Vector3.one, _confBulletConfig.ScaleDuration)
                 .SetEase(Ease.OutBack) // 使用 OutBack 缓动，有弹性效果
                 .SetAutoKill(true);
         }
-
-        private void Update()
-        {
-            if (!isStart) return;
-            // 检查是否超出最大飞行距离
-            float travelDistance = Vector2.Distance(startPosition, transform.position);
-            if (travelDistance >= _bulletConfig.MaxTravelDistance)
-            {
-                Debug.Log("远距离销毁");
-                DestroyBullet();
-            }
-        }
-
-        private void FixedUpdate()
-        {
-            if (!isStart) return;
-            // 保持直线运动
-            if (rb != null)
-            {
-                // 确保子弹保持固定方向和速度
-                if (rb.velocity.magnitude < _bulletConfig.Speed * 0.9f)
-                {
-                    rb.velocity = moveDirection * _bulletConfig.Speed;
-                }
-            }
-        }
-
+        
         // 更新视觉效果
         private void UpdateVisuals()
         {
@@ -108,6 +82,7 @@ namespace Gameplay
             if (spriteRenderer != null)
             {
                 spriteRenderer.color = bulletColorVisual;
+                spriteRenderer.enabled = true;
             }
         }
 
@@ -142,7 +117,7 @@ namespace Gameplay
                 if (joint.GetColorType() == _bulletColor && !joint.IsHead() && !joint.IsTail())
                 {
                     // 造成伤害
-                    joint.TakeDamage(_bulletConfig.Damage);
+                    joint.TakeDamage(_confBulletConfig.Damage);
 
                     // 播放命中效果
                     PlayHitEffects();
@@ -151,8 +126,8 @@ namespace Gameplay
                     DestroyBullet();
                 }
             }
-            // 如果击中非目标物体，也销毁子弹
-            else if (!hitObject.CompareTag("Turret")) // 忽略炮台自身的碰撞
+            // 如果击中非目标物体，也销毁子弹  忽略炮台自身的碰撞
+            else if (!hitObject.CompareTag("Turret")) 
             {
                 Debug.Log("未击中销毁");
                 DestroyBullet();
@@ -163,67 +138,58 @@ namespace Gameplay
         private void PlayHitEffects()
         {
             // 1. 生成命中粒子特效
-            if (!string.IsNullOrEmpty(_bulletConfig.HitEffectName))
+            if (!string.IsNullOrEmpty(_confBulletConfig.HitEffectName))
             {
                 GameObject hitEffect = EffectManager.Instance.InstantiateEffect(
-                    _bulletConfig.HitEffectName,
+                    _confBulletConfig.HitEffectName,
                     transform.position,
                     Quaternion.identity);
 
                 if (hitEffect != null)
                 {
                     // 自动销毁特效
-                    Destroy(hitEffect, _bulletConfig.HitEffectDuration);
+                    Destroy(hitEffect, _confBulletConfig.HitEffectDuration);
                 }
             }
 
             // 2. 播放命中音效
-            if (!string.IsNullOrEmpty(_bulletConfig.HitSoundName))
+            if (!string.IsNullOrEmpty(_confBulletConfig.HitSoundName))
             {
-                AudioManager.Instance.PlaySound(_bulletConfig.HitSoundName, transform.position);
+                AudioManager.Instance.PlaySound(_confBulletConfig.HitSoundName, transform.position);
             }
 
             // 3. 屏幕震动
-            if (_bulletConfig.ScreenShakeIntensity > 0f)
+            if (_confBulletConfig.ScreenShakeIntensity > 0f)
             {
                 // 假设有一个 CameraShake 单例
                 var cameraShake = Camera.main?.GetComponent<CameraShake>();
                 if (cameraShake != null)
                 {
-                    cameraShake.Shake(_bulletConfig.ScreenShakeDuration, _bulletConfig.ScreenShakeIntensity);
+                    cameraShake.Shake(_confBulletConfig.ScreenShakeDuration, _confBulletConfig.ScreenShakeIntensity);
                 }
             }
 
             // 4. Hit Stop（命中顿帧）
-            if (_bulletConfig.HitStopDuration > 0f)
+            if (_confBulletConfig.HitStopDuration > 0f)
             {
-                DoHitStop(_bulletConfig.HitStopDuration);
+                DoHitStop(_confBulletConfig.HitStopDuration);
             }
         }
 
         // 命中顿帧效果 - 使用 DOTween
         private void DoHitStop(float duration)
         {
-            // 保存原始时间缩放
-            float originalTimeScale = Time.timeScale;
-
-            // 暂停时间
             Time.timeScale = 0f;
-
-            // 使用 DOTween 的延迟回调（忽略时间缩放）
             DOVirtual.DelayedCall(duration, () =>
             {
-                Time.timeScale = originalTimeScale;
-            }, true); // true = 使用 unscaled time
+                Time.timeScale = 1f;
+            }, true).SetUpdate(true);
         }
 
         // 销毁子弹
         private void DestroyBullet()
         {
-            isStart = false;
-            // 禁用碰撞和渲染
-            Collider2D collider = GetComponent<Collider2D>();
-            if (collider != null) collider.enabled = false;
+            _isStart = false;
             if (spriteRenderer != null) spriteRenderer.enabled = false;
 
             // 停止移动
@@ -236,15 +202,60 @@ namespace Gameplay
             // }
             // else
             {
-                Invoke("ActuallyDestroy", 0.1f);
+                Invoke(nameof(RecyleBullet), 0.1f);
             }
         }
 
         // 实际销毁对象
-        private void ActuallyDestroy()
+        private void RecyleBullet()
         {
-            Destroy(gameObject);
+            Clear();
+            BulletManager.Instance.RecycleBullet(this);
         }
 
+        private void Clear()
+        {
+            _confBulletConfig = null;
+            if (rb != null) rb.velocity = Vector2.zero;  // 添加这行
+        }
+        
+        
+        public override void Init(params object[] parameters)
+        {
+            int id = (int)parameters[0];
+            ColorType colorType = (ColorType)parameters[1];
+            Vector2 direction =  (Vector2)parameters[2];
+            _bulletColor = colorType;
+            _confBulletConfig = BulletManager.Instance.GetBulletConf(id);
+            _startPosition = this.transform.position; 
+            _moveDirection = direction.normalized;
+
+            UpdateVisuals();
+            
+            // 应用初始速度
+            if (rb != null)
+            {
+                rb.velocity = _moveDirection * _confBulletConfig.Speed;
+            }
+
+            // 设置初始旋转
+            float angle = Mathf.Atan2(_moveDirection.y, _moveDirection.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
+
+            // 发射缩放动画 - 使用 DOTween
+            PlayLaunchScaleAnimation();
+
+            _isStart = true;
+        }
+
+        public override void Recycle()
+        {
+            RecyleBullet();
+        }
+
+        public override void Destroy()
+        {
+            Clear();
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Framework.UIFramework;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -26,9 +27,6 @@ public class GameManager : MonoBehaviour
     {
         // 初始化UI根节点
         var uiRoot = Instantiate(_uiRootPrefab);
-        UIManager.Instance.SetUIRoot(uiRoot.transform);
-        
-        UIManager.Instance.OpenPanel("UIGameOperPanel");
     }
 
     // 微信小游戏特定API调用

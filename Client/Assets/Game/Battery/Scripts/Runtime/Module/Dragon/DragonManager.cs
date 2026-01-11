@@ -1,37 +1,94 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Gameplay
 {
     public class DragonManager : Singleton<DragonManager>
     {
-        private Dictionary<int, DragonConf>  _dragonsConf = new Dictionary<int, DragonConf>()
+
+        #region Dragon Config
+
+        private Dictionary<int, ConfDragon>  _dragonsConf = new Dictionary<int, ConfDragon>()
         {
             {
-                0, 
-                new DragonConf()
+                0,
+                new ConfDragon()
                 {
                     NormalMoveSpeed = 5,
-                    MaxMoveSpeed = 25f,
-                    MasSpeedTime = 5,
-                    JointSpacing = 6f,
-                    MaxJoints = 20,
+                    MaxMoveSpeed = 40f,
+                    MaxSpeedDurationTime = 5,
+                    DragonJointSpacing = 6f,
                     PositionSmoothness = 10f,
-                    RealignSpeed = 5f,  // 重新对齐的速度
+                    DragonJoints = new []{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    DragonJointColors = new []{0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 2, 2, 0},
                 }
             }
         };
 
-        public DragonConf GetDragonConf(int id)
+        public ConfDragon GetDragonConf(int id)
         {
             return _dragonsConf[id];
         }
-        
-        public ColorType GetDefaultColor(int id)
+
+        #endregion
+
+        #region DragonJoints Config
+
+        private Dictionary<int, ConfDragonJoint> _dragonJointsConf = new Dictionary<int, ConfDragonJoint>()
         {
-            int num = (int)ColorType.End - 1;
-            int idx = id % num;
-            return (ColorType)idx;
+            {
+                0,
+                new ConfDragonJoint()
+                {
+                    Id = 0,
+                    Health = 1,
+                }
+            }
+        };
+
+        public ConfDragonJoint GetDragonJointConf(int id)
+        {
+            return _dragonJointsConf[id];
         }
+
+        #endregion
         
+        private DragonJoint[] _attackDragonJoints;
+        public DragonJoint[]  AttackDragonJoints
+        {
+            get => _attackDragonJoints;
+            set => _attackDragonJoints = value;
+        }
+
+        public Action<bool> OnSuccessEvent;
+        
+        
+        /// <summary>
+        /// 查询最近的龙骨节点
+        /// </summary>
+        /// <returns></returns>
+        public DragonJoint FindNearestMatchingJoint(ColorType colorType, Vector3 firePoint)
+        {
+            float minDistance = float.MaxValue;
+            DragonJoint nearestJoint = null;
+
+            var allJoints = AttackDragonJoints;
+            foreach (var joint in allJoints)
+            {
+                if (!joint.IsAlive() || joint.GetColorType() != colorType) continue;
+                if (joint.IsHead() || joint.IsTail()) continue;
+
+                float distance = Vector2.Distance(firePoint, joint.transform.position);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestJoint = joint;
+                }
+            }
+
+            return nearestJoint;
+        }
+
     }
 }

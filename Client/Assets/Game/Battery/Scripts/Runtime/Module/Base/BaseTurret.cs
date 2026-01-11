@@ -4,17 +4,17 @@ namespace Gameplay
 {
     public enum ColorType
     {
-        Red,    // 攻击红色节点
-        Green,  // 攻击绿色节点
-        Blue,   // 攻击蓝色节点
-        Yellow,
-        Purple,
-        Orange,
-        End
+        Red    = 0,   
+        Green  = 1,   
+        Blue   = 2,   
+        Yellow = 3,
+        Purple = 4,
+        Orange = 5,
+        None
     }
 
-    public abstract class BaseTurret : MonoBehaviour
+    public abstract class BaseTurret : PoolMonoObject
     {
-        public abstract void SetTurret(TurretData td);
+        public abstract void SetupTurret(Transform parent);
     }
 }
