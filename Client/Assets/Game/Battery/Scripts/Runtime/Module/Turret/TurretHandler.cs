@@ -45,13 +45,20 @@ public class TurretHandler : SingletonMono<TurretHandler>
     // 固定横向3列
     private int _columnCount = 3; 
     // 竖向行数n（每列最大炮台数量）
-    private int _rowCount = 10; 
+    private int _rowCount = 10;
+    private LayerMask targetLayer;
     // 核心网格数据：[列索引][列内炮台列表]，保证每列独立管理、补位
     private List<List<TurretData>> _turretDataList;
 
     // 炮台移除
     public event Action<int> OnRefreshTurret;
- 
+
+    protected override void Awake()
+    {
+        base.Awake();
+        targetLayer = LayerMask.GetMask("Game");
+    }
+
     private void Update()
     {
         OnRaycastClick();
@@ -195,15 +202,19 @@ public class TurretHandler : SingletonMono<TurretHandler>
         if (Input.GetMouseButtonDown(0)) // 鼠标左键点击
         {
             // 将屏幕点击位置转换为世界坐标
-            Vector3 clickPosition = UIRoot.UICamera.ScreenToWorldPoint(Input.mousePosition);
-            
-            // 创建2D射线
-            RaycastHit2D hit = Physics2D.Raycast(clickPosition, Vector2.zero);
-            
-            if (hit.collider != null && hit.collider.gameObject.CompareTag("Turret"))
+            if (Camera.main != null)
             {
-                Debug.Log($"点击到: {hit.collider.gameObject.name}");
-                OnClickTurret(hit.collider.gameObject);
+                // 从相机发射射线到鼠标位置
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, targetLayer))
+                {
+                    if (hit.collider.gameObject.CompareTag("Turret"))
+                    {
+                        Debug.Log($"点击到: {hit.collider.gameObject.name}");
+                        OnClickTurret(hit.collider.gameObject);
+                    }
+                }
             }
         }
     }
@@ -301,8 +312,13 @@ public class TurretHandler : SingletonMono<TurretHandler>
             _turretsGrid.ClearTurrets();
         }
 
-        // _turretSeatList = null;
-        // _turretsGrid = null;
+        if (_turretSeatList != null)
+        {
+            foreach (var turretSeat in _turretSeatList)
+            {
+                turretSeat.SetOccupy(false);
+            }
+        }
     }
     
     public TurretSeat GetTurretSeat()
