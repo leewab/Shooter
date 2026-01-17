@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using GameUI;
+using ResKit;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -121,6 +123,23 @@ namespace Framework.UIFramework
         {
             var uiInfo = UIDefine.GetUIInfo(panelName);
             return UIHandler.Instance.GetCachedPanel(uiInfo.UIPath);
+        }
+
+        #endregion
+
+
+        #region GetSprite
+
+        public static Sprite GetSprite(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            if (!name.StartsWith("Assets/"))
+            {
+                name = $"{PathDefine.PATH_RES_PRODUCT_DIR}/UI/{name}.png";
+            }
+            
+            return ResourceManager.Instance.Load<Sprite>(name);
         }
 
         #endregion

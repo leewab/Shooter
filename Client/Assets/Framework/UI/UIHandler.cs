@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using ResKit;
 using UnityEngine;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -33,9 +33,6 @@ namespace Framework.UIFramework
 
         // UI面板缓存（单例模式的面板缓存）
         private readonly Dictionary<string, UIPanel> _panelCache = new Dictionary<string, UIPanel>();
-
-        // UI加载中的操作句柄
-        private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _loadingHandles = new Dictionary<string, AsyncOperationHandle<GameObject>>();
 
         // UI栈（用于管理面板的显示顺序）
         private readonly Stack<UIPanel> _panelStack = new Stack<UIPanel>();
@@ -165,15 +162,8 @@ namespace Framework.UIFramework
         /// </summary>
         private void LoadPanelAsync(string assetKey, PanelType panelType, Action<UIPanel> onComplete)
         {
-            // 检查是否正在加载中
-            if (_loadingHandles.ContainsKey(assetKey))
-            {
-                Debug.LogWarning($"[UIFramework] Panel is already loading: {assetKey}");
-                return;
-            }
-
             // 使用ResourceManager加载
-            ResourceManager.Instance.LoadAssetAsync<GameObject>(assetKey, (prefab) =>
+            ResourceManager.Instance.LoadAsync<GameObject>(assetKey, (prefab) =>
             {
                 if (prefab == null)
                 {
@@ -332,7 +322,7 @@ namespace Framework.UIFramework
                 }
 
                 // 释放Addressable资源
-                ResourceManager.Instance.ReleaseAsset(fullAssetKey);
+                ResourceManager.Instance.Release(fullAssetKey);
             }
         }
 
@@ -359,7 +349,7 @@ namespace Framework.UIFramework
             // 如果不是完整路径，添加默认前缀
             if (!assetKey.StartsWith("Assets/"))
             {
-                return $"Assets/Res/UI/{assetKey}.prefab";
+                return $"{PathDefine.PATH_RES_PRODUCT_DIR}/UI/{assetKey}.prefab";
             }
 
             return assetKey;
