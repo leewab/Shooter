@@ -1,0 +1,18 @@
+{
+    "name": "AssetBundle.Editor",
+    "rootNamespace": "ResKit",
+    "references": [
+        "GUID:905539af55460b34cbb13a477e9d2881"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

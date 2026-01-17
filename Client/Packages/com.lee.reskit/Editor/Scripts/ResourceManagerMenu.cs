@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Framework.Editor
+namespace ResKit
 {
     public class ResourceManagerMenu
     {
@@ -31,7 +31,7 @@ namespace Framework.Editor
         [MenuItem(MENU_ASSETDATABASE, false, 2)]
         private static void SetUseAssetDatabase()
         {
-            PlayerPrefs.SetInt(ResourceManager.USE_ADDRESSABLES_KEY, (int)LoadMode.Editor);
+            PlayerPrefs.SetInt(ResourceManager.USE_ADDRESSABLES_KEY, (int)LoadMode.Editor_AssetDatabase);
             PlayerPrefs.Save();
             Debug.Log("[ResourceManager] 已切换至 AssetDatabase 模式（仅编辑器）");
             Menu.SetChecked(MENU_ASSETBUNDLE, false);
@@ -42,7 +42,7 @@ namespace Framework.Editor
         [MenuItem(MENU_ASSETDATABASE, true)]
         private static bool ValidateUseAssetDatabase()
         {
-            Menu.SetChecked(MENU_ASSETDATABASE, ResourceManager.GetLoadMode() == LoadMode.Editor);
+            Menu.SetChecked(MENU_ASSETDATABASE, ResourceManager.GetLoadMode() == LoadMode.Editor_AssetDatabase);
             return true;
         }
         
