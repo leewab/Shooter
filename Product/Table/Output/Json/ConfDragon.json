@@ -1,0 +1,44 @@
+﻿[
+  {
+    "Id": 0,
+    "NormalMoveSpeed": 5,
+    "MaxMoveSpeed": 40,
+    "MaxSpeedDurationTime": 4.0,
+    "DragonJointSpacing": 9.0,
+    "PositionSmoothness": 10.0,
+    "DragonJoints": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "DragonJointColors": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      2,
+      2,
+      3,
+      3,
+      3,
+      2,
+      2,
+      0
+    ]
+  }
+]
