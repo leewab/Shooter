@@ -16,7 +16,7 @@ set EXETOOL_DIR=bin\Release\net6.0\ExcelToJsonTool.exe
 
 REM Unity项目输出路径
 set OUTPUT_CSHARP=..\..\Client\Assets\Game\Scripts\Runtime\Conf
-set OUTPUT_JSON=..\..\Client\Assets\Res\Conf
+set OUTPUT_JSON=..\..\Res\Assets\Product\Conf
 
 REM 1. 检查工具是否存在
 if not exist "%EXETOOL_DIR%" (

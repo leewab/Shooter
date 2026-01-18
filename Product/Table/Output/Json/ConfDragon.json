@@ -2,8 +2,8 @@
   {
     "Id": 0,
     "NormalMoveSpeed": 5,
-    "MaxMoveSpeed": 40,
-    "MaxSpeedDurationTime": 4.0,
+    "MaxMoveSpeed": 60,
+    "MaxSpeedDurationTime": 8.0,
     "DragonJointSpacing": 9.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
