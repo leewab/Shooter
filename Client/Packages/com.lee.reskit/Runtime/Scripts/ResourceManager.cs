@@ -13,8 +13,10 @@ namespace ResKit
     {
         // 编辑器模式下的加载方式
         Editor_AssetDatabase, // 编辑器下使用AssetDatabase加载
-        Editor_LocalBundle, // 编辑器下使用本地Bundle加载
+        Editor_LocalBundle,   // 编辑器下使用本地Bundle加载
 
+        ResourceLoad,
+        
         // 真机模式下的加载方式
         Bundle, // 真机下使用本地Bundle加载
 
@@ -90,7 +92,9 @@ namespace ResKit
             Mode = GetLoadMode();
 
             // 初始化时解析AssetManifest，除了AssetDatabase模式外都需要解析
-            if (Mode != LoadMode.Editor_AssetDatabase)
+            if (Mode == LoadMode.Editor_LocalBundle ||
+                Mode == LoadMode.Bundle ||
+                Mode == LoadMode.WeChat)
             {
                 LoadAssetManifest();
             }
@@ -190,7 +194,8 @@ namespace ResKit
             {
                 // 本地Bundle模式从本地路径加载
                 PathType pathType = IsEditorMode() ? PathType.AssetBundleOutput : GetPathType();
-                return PathManager.GetLocalBundleFilePath(pathType, ASSET_MANIFEST_NAME);
+                string platformDir = PathManager.GetPlatformFolder();
+                return PathManager.GetLocalBundleFilePath(pathType, platformDir,ASSET_MANIFEST_NAME);
             }
         }
 
@@ -327,7 +332,7 @@ namespace ResKit
             {
                 callback?.Invoke(obj as T);
             });
-            // StartCoroutine(iEnumerator);
+            StartCoroutine(iEnumerator);
         }
 
         #endregion
@@ -361,14 +366,13 @@ namespace ResKit
         {
             switch (Application.platform)
             {
+                case RuntimePlatform.WindowsEditor:
+                    return IsBundleMode() ? PathType.AssetBundleOutput : PathType.Assets;
                 case RuntimePlatform.IPhonePlayer:
                 case RuntimePlatform.Android:
-                    return PathType.PersistentData;
                 case RuntimePlatform.WindowsPlayer:
-                case RuntimePlatform.WindowsEditor:
-                    return PathType.StreamingAssets;
                 case RuntimePlatform.WebGLPlayer:
-                    break;
+                    return IsBundleMode() ? PathType.StreamingAssets : PathType.Assets;
             }
 
             return PathType.AssetBundleOutput;
@@ -390,8 +394,13 @@ namespace ResKit
         /// <returns>加载模式</returns>
         public static LoadMode GetLoadMode()
         {
+            return LoadMode.ResourceLoad;
+#if UNITY_EDITOR
             Mode = (LoadMode)PlayerPrefs.GetInt(USE_ADDRESSABLES_KEY, (int)LoadMode.Editor_AssetDatabase);
             return Mode;
+#else
+            return LoadMode.ResourceLoad;
+#endif
         }
 
         /// <summary>

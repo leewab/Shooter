@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Framework.UIFramework;
 using GameConfig;
 using Gameplay;
 using GameUI;
+using ResKit;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -15,7 +15,12 @@ public class DragonController : MonoBehaviour
     [Header("Dragon Settings")] 
     public GameObject jointHead;
     public GameObject jointTail;
-    public GameObject jointPrefab;
+    public GameObject jointBody;
+    
+    private const string PathDataPath = "Product/Game/PathData/Game.asset";
+    private const string DragonHeadPath = "Product/Game/Prefab/DragonHead.prefab";
+    private const string DragonTailPath = "Product/Game/Prefab/DragonTail.prefab";
+    private const string DragonBodyPath = "Product/Game/Prefab/DragonPart.prefab";
     
     // 所有关节
     private List<DragonJoint> allDragonJoints;
@@ -31,6 +36,14 @@ public class DragonController : MonoBehaviour
     private float colorTimer = 0f;
     private float _CurSpeed;
     private float _SpeedChangeTimer;
+
+    void Start()
+    {
+        if (_PathData == null) _PathData = ResourceManager.Instance.Load<PathPointData>(PathDataPath);
+        if (jointHead == null) jointHead = ResourceManager.Instance.Load<GameObject>(DragonHeadPath);
+        if (jointTail == null) jointTail = ResourceManager.Instance.Load<GameObject>(DragonTailPath);
+        if (jointBody == null) jointBody = ResourceManager.Instance.Load<GameObject>(DragonBodyPath);
+    }
     
     private void Update()
     {
@@ -138,7 +151,7 @@ public class DragonController : MonoBehaviour
         {
             ColorType colorType = (ColorType)colorTypes[i];
             ConfDragonJoint conf = ConfDragonJoint.GetConf<ConfDragonJoint>(jointIds[i]);
-            bodyJoints.Add(CreateJoint(jointPrefab, DragonJointType.Body, colorType, conf, index++));
+            bodyJoints.Add(CreateJoint(jointBody, DragonJointType.Body, colorType, conf, index++));
         }
 
         return bodyJoints;

@@ -79,7 +79,8 @@ namespace ResKit
                 case LoadMode.Bundle:
                     return LoadWithBundle();
                 case LoadMode.WeChat:
-                    break;
+                case LoadMode.ResourceLoad:
+                    return LoadWithResource();
             }
 
             return null;
@@ -92,6 +93,14 @@ namespace ResKit
             return UnityEditor.AssetDatabase.LoadAssetAtPath<T>(AssetPath);
         }
 #endif
+        
+        private T LoadWithResource()
+        {
+            if (string.IsNullOrEmpty(AssetPath)) return null;
+            string assetPath = Path.ChangeExtension(AssetPath.Replace("Assets/Res/", ""), null);
+            Debug.Log("Resource 加载：" + assetPath);
+            return Resources.Load<T>(assetPath);
+        }
 
         private T LoadWithBundle()
         {
@@ -165,6 +174,10 @@ namespace ResKit
                 case LoadMode.WeChat:
                     yield return LoadAsyncWithBundle(callback);
                     break;
+                case LoadMode.ResourceLoad:
+                    var asset1 = LoadWithResource();
+                    callback?.Invoke(asset1);
+                    yield break;
             }
 
             yield return null;
@@ -215,6 +228,7 @@ namespace ResKit
         {
             if (IsLoaded)
             {
+                Resources.UnloadAsset(Asset);
                 Asset = null;
                 IsLoaded = false;
 

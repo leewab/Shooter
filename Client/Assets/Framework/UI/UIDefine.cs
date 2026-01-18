@@ -9,21 +9,10 @@ namespace GameUI
         public PanelType PanelType;
     }
     
-    public class UIDefine
+    public partial class UIDefine
     {
-        public static Dictionary<string, UIInfo> UIInfos = new Dictionary<string, UIInfo>()
-        {
-            {
-                nameof(UIGameResultPanel),
-                new UIInfo()
-                {
-                    UIPath = "UIGameResultPanel",
-                    PanelType = PanelType.Popup,
-                }
-            },
+        public static Dictionary<string, UIInfo> UIInfos = new Dictionary<string, UIInfo>();
             
-        };
-
         public static UIInfo GetUIInfo(string panelName)
         {
             if (!UIInfos.ContainsKey(panelName))

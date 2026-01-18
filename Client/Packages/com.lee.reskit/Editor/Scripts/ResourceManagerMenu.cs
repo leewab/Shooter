@@ -8,6 +8,7 @@ namespace ResKit
         private const string MENU_PATH = "Tools/Resource Mode/";
         private const string MENU_ASSETBUNDLE = "Tools/Resource Mode/AssetBundle";
         private const string MENU_ASSETDATABASE = "Tools/Resource Mode/AssetDatabase";
+        private const string MENU_RESOURCELOAD = "Tools/Resource Mode/ResourceLoad";
         private const string MENU_WEIXINPATH = "Tools/Resource Mode/微信加载";
 
         [MenuItem(MENU_ASSETBUNDLE, false, 1)]
@@ -19,6 +20,7 @@ namespace ResKit
             Menu.SetChecked(MENU_ASSETBUNDLE, true);
             Menu.SetChecked(MENU_ASSETDATABASE, false);
             Menu.SetChecked(MENU_WEIXINPATH, false);
+            Menu.SetChecked(MENU_RESOURCELOAD, false);
         }
 
         [MenuItem(MENU_ASSETBUNDLE, true)]
@@ -37,6 +39,7 @@ namespace ResKit
             Menu.SetChecked(MENU_ASSETBUNDLE, false);
             Menu.SetChecked(MENU_ASSETDATABASE, true);
             Menu.SetChecked(MENU_WEIXINPATH, false);
+            Menu.SetChecked(MENU_RESOURCELOAD, false);
         }
 
         [MenuItem(MENU_ASSETDATABASE, true)]
@@ -55,12 +58,32 @@ namespace ResKit
             Menu.SetChecked(MENU_ASSETBUNDLE, false);
             Menu.SetChecked(MENU_ASSETDATABASE, false);
             Menu.SetChecked(MENU_WEIXINPATH, true);
+            Menu.SetChecked(MENU_RESOURCELOAD, false);
         }
 
         [MenuItem(MENU_WEIXINPATH, true)]
         private static bool ValidateWeiXinPath()
         {
             Menu.SetChecked(MENU_WEIXINPATH, ResourceManager.GetLoadMode() == LoadMode.WeChat);
+            return true;
+        }
+        
+        [MenuItem(MENU_RESOURCELOAD, false, 2)]
+        private static void SetUseResourcePath()
+        {
+            PlayerPrefs.SetInt(ResourceManager.USE_ADDRESSABLES_KEY, (int)LoadMode.ResourceLoad);
+            PlayerPrefs.Save();
+            Debug.Log("[ResourceManager] 已切换至 微信加载 模式（仅编辑器）");
+            Menu.SetChecked(MENU_ASSETBUNDLE, false);
+            Menu.SetChecked(MENU_ASSETDATABASE, false);
+            Menu.SetChecked(MENU_WEIXINPATH, false);
+            Menu.SetChecked(MENU_RESOURCELOAD, true);
+        }
+
+        [MenuItem(MENU_RESOURCELOAD, true)]
+        private static bool ValidateResourcePath()
+        {
+            Menu.SetChecked(MENU_WEIXINPATH, ResourceManager.GetLoadMode() == LoadMode.ResourceLoad);
             return true;
         }
 

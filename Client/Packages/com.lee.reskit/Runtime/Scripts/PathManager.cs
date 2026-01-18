@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace ResKit
@@ -31,9 +32,9 @@ namespace ResKit
         AssetBundleOutput,
 
         /// <summary>
-        /// 游戏数据路径
+        /// Unity编辑器下Assets
         /// </summary>
-        GameData
+        Assets,
     }
 
     /// <summary>
@@ -74,8 +75,8 @@ namespace ResKit
                 case PathType.AssetBundleOutput:
                     path = GetAssetBundleOutputPath();
                     break;
-                case PathType.GameData:
-                    path = GetGameDataPath();
+                case PathType.Assets:
+                    path = GetAssetsPath();
                     break;
             }
 
@@ -93,9 +94,8 @@ namespace ResKit
         /// </summary>
         /// <param name="filePath">Bundle名称</param>
         /// <returns>Bundle路径</returns>
-        public static string GetLocalBundleFilePath(PathType basePathType, string filePath = "")
+        public static string GetLocalBundleFilePath(PathType basePathType, string platformFolder, string filePath)
         {
-            string platformFolder = GetPlatformFolder();
             return PathManager.Combine(basePathType, "AssetBundles", platformFolder, filePath);
         }
 
@@ -168,33 +168,16 @@ namespace ResKit
         /// 获取游戏数据路径
         /// </summary>
         /// <returns>游戏数据完整路径</returns>
-        private static string GetGameDataPath()
+        private static string GetAssetsPath()
         {
-#if UNITY_EDITOR
-            // 编辑器下从Assets路径加载
             return Application.dataPath;
-#elif UNITY_STANDALONE_WIN
-            // Windows平台从StreamingAssets或本地缓存加载
-            return Path.Combine(Application.streamingAssetsPath, "GameData");
-#elif UNITY_ANDROID
-            // Android平台从PersistentDataPath加载
-            return Path.Combine(Application.persistentDataPath, "GameData");
-#elif UNITY_IOS
-            // iOS平台从PersistentDataPath加载
-            return Path.Combine(Application.persistentDataPath, "GameData");
-#elif UNITY_WEBGL
-            // WebGL平台从StreamingAssets加载
-            return Path.Combine(Application.streamingAssetsPath, "GameData");
-#else
-            return Path.Combine(Application.streamingAssetsPath, "GameData");
-#endif
         }
 
         /// <summary>
         /// 获取当前平台对应的文件夹名称
         /// </summary>
         /// <returns>平台文件夹名称</returns>
-        private static string GetPlatformFolder()
+        public static string GetPlatformFolder()
         {
             switch (Application.platform)
             {
@@ -204,8 +187,6 @@ namespace ResKit
                 case RuntimePlatform.OSXPlayer:
                 case RuntimePlatform.OSXEditor:
                     return "StandaloneOSX";
-                case RuntimePlatform.LinuxPlayer:
-                    return "StandaloneLinux64";
                 case RuntimePlatform.Android:
                     return "Android";
                 case RuntimePlatform.IPhonePlayer:
@@ -218,6 +199,34 @@ namespace ResKit
                     return "Unknown";
             }
         }
+        
+#if UNITY_EDITOR
+        
+        /// <summary>
+        /// 获取打包对应平台对应的文件夹名称
+        /// </summary>
+        /// <returns>平台文件夹名称</returns>
+        public static string GetBuildTargetPlatformFolder(BuildTarget platform)
+        {
+            switch (platform)
+            {
+                case BuildTarget.StandaloneWindows:
+                case BuildTarget.StandaloneWindows64:
+                    return "StandaloneWindows64";
+                case BuildTarget.Android:
+                    return "Android";
+                case BuildTarget.iOS:
+                    return "IOS";
+                case BuildTarget.WebGL:
+                    return "WebGL";
+                // case RuntimePlatform.WeChatGame:
+                //     return "WeChatGame";
+                default:
+                    return "Unknown";
+            }
+        }
+        
+#endif
 
         /// <summary>
         /// 标准化路径，使用统一的分隔符
@@ -362,7 +371,7 @@ namespace ResKit
             Debug.Log($"PersistentData: {GetPath(PathType.PersistentData)}");
             Debug.Log($"TemporaryCache: {GetPath(PathType.TemporaryCache)}");
             Debug.Log($"AssetBundleOutput: {GetPath(PathType.AssetBundleOutput)}");
-            Debug.Log($"GameData: {GetPath(PathType.GameData)}");
+            Debug.Log($"GameData: {GetPath(PathType.Assets)}");
             Debug.Log("============================");
         }
     }

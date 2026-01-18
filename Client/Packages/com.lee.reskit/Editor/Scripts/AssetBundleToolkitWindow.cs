@@ -401,7 +401,9 @@ namespace ResKit
                     return;
                 }
 
-                string outputPath = PathManager.GetLocalBundleFilePath(PathType.AssetBundleOutput);
+                Debug.LogError(settings.buildTarget.ToString());
+                string platformFolder = PathManager.GetBuildTargetPlatformFolder(settings.buildTarget);
+                string outputPath = PathManager.GetLocalBundleFilePath(PathType.AssetBundleOutput, platformFolder, "");
 
                 // 打包
                 EditorUtility.DisplayProgressBar("打包中", "正在构建AssetBundles...", 0.3f);

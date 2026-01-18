@@ -38,7 +38,8 @@ namespace ResKit
         public BundleEntity(string bundleName)
         {
             PathType pathType = ResourceManager.Instance.GetPathType();
-            BundlePath = PathManager.GetLocalBundleFilePath(pathType, bundleName);
+            string platformDir = PathManager.GetPlatformFolder();
+            BundlePath = PathManager.GetLocalBundleFilePath(pathType, platformDir, bundleName);
             RefCount = 0;
             IsLoaded = false;
         }
@@ -140,6 +141,7 @@ namespace ResKit
         {
             if (IsLoaded && Bundle != null)
             {
+                Resources.UnloadAsset(Bundle);
                 Bundle.Unload(false);
                 Bundle = null;
                 IsLoaded = false;
