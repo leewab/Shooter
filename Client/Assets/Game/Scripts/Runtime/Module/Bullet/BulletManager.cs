@@ -55,5 +55,10 @@ namespace Gameplay
         }
 
         #endregion
+        
+        public Sprite GetBulletSprite(string spriteName)
+        {
+            return ResourceManager.Instance.Load<Sprite>($"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Icon/Bullet/{spriteName}");
+        }
     }
 }

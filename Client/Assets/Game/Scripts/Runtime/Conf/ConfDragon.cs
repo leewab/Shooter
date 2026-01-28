@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfDragon
 // 表描述: 龙
-// 生成时间: 2026-01-18 20:16:32
+// 生成时间: 2026-01-27 23:23:00
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -18,6 +18,12 @@ namespace GameConfig
     [Serializable]
     public class ConfDragon  : BaseConf
     {
+        /// <summary>
+        /// 龙名称
+        /// </summary>
+        [JsonProperty("DraongName")]
+        public string DraongName { get; set; } = string.Empty;
+
         /// <summary>
         /// 正常速度
         /// </summary>
@@ -56,7 +62,7 @@ namespace GameConfig
         /// </summary>
         public override string ToString()
         {
-            return $"ConfDragon " + string.Join(", ", new string[] { $"Id={Id}", $"NormalMoveSpeed={NormalMoveSpeed}", $"MaxMoveSpeed={MaxMoveSpeed}", $"MaxSpeedDurationTime={MaxSpeedDurationTime}", $"DragonJointSpacing={DragonJointSpacing}", $"PositionSmoothness={PositionSmoothness}", $"DragonJoints={DragonJoints}", $"DragonJointColors={DragonJointColors}" });
+            return $"ConfDragon " + string.Join(", ", new string[] { $"Id={Id}", $"DraongName={DraongName}", $"NormalMoveSpeed={NormalMoveSpeed}", $"MaxMoveSpeed={MaxMoveSpeed}", $"MaxSpeedDurationTime={MaxSpeedDurationTime}", $"DragonJointSpacing={DragonJointSpacing}", $"PositionSmoothness={PositionSmoothness}", $"DragonJoints={DragonJoints}", $"DragonJointColors={DragonJointColors}" });
         }
     }
 }

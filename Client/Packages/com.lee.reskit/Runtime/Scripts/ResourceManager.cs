@@ -68,7 +68,7 @@ namespace ResKit
         private AssetManifest _manifest;
 
         // 资源映射字典
-        private Dictionary<string, AssetEntity<Object>> _assetEntities = new(); // AssetPath -> AssetEntity
+        private Dictionary<string, AssetEntity> _assetEntities = new(); // AssetPath -> AssetEntity
         private Dictionary<string, BundleEntity> _bundleEntities = new(); // BundleName -> BundleEntity
         private Dictionary<string, string> _assetToBundleMap = new(); // AssetPath -> BundleName
         private Dictionary<string, List<string>> _assetDependencies = new(); // AssetPath -> Dependencies
@@ -104,7 +104,7 @@ namespace ResKit
 
         #region AssetManifest加载与解析
 
-        public AssetEntity<Object> GetAssetEntity(string assetPath)
+        public AssetEntity GetAssetEntity(string assetPath)
         {
             if (string.IsNullOrEmpty(assetPath))
             {
@@ -112,7 +112,7 @@ namespace ResKit
                 return null;
             }
             
-            if (_assetEntities.TryGetValue(assetPath, out AssetEntity<Object> assetEntity))
+            if (_assetEntities.TryGetValue(assetPath, out AssetEntity assetEntity))
             {
                 return assetEntity;
             }
@@ -122,11 +122,11 @@ namespace ResKit
             return AllocateAssetEntity(assetPath, bundleName, assetDeps);
         }
 
-        public AssetEntity<Object> AllocateAssetEntity(string assetPath, string bundleName, List<string> dependencies)
+        public AssetEntity AllocateAssetEntity(string assetPath, string bundleName, List<string> dependencies)
         {
-            if (!_assetEntities.TryGetValue(assetPath, out AssetEntity<Object> assetEntity))
+            if (!_assetEntities.TryGetValue(assetPath, out AssetEntity assetEntity))
             {
-                _assetEntities.Add(assetPath, assetEntity = new AssetEntity<Object>(assetPath, bundleName, dependencies));
+                _assetEntities.Add(assetPath, assetEntity = new AssetEntity(assetPath, bundleName, dependencies));
             }
             
             return assetEntity;
@@ -306,12 +306,13 @@ namespace ResKit
         /// <returns>加载的资源</returns>
         public T Load<T>(string path) where T : UnityEngine.Object
         {
-            if (!_assetEntities.TryGetValue(path, out AssetEntity<UnityEngine.Object> assetEntity))
+            // Debug.Log(path);
+            if (!_assetEntities.TryGetValue(path, out AssetEntity assetEntity))
             {
                 assetEntity = GetAssetEntity(path);
             }
 
-            return assetEntity.Load() as T;
+            return assetEntity.Load<T>();
         }
 
         /// <summary>
@@ -323,7 +324,7 @@ namespace ResKit
         /// <returns>协程</returns>
         public void LoadAsync<T>(string path, System.Action<T> callback) where T : UnityEngine.Object
         {
-            if (!_assetEntities.TryGetValue(path, out AssetEntity<Object> assetEntity))
+            if (!_assetEntities.TryGetValue(path, out AssetEntity assetEntity))
             {
                 assetEntity = GetAssetEntity(path);
             }
@@ -348,7 +349,7 @@ namespace ResKit
             // 标准化资源路径
             string normalizedPath = NormalizePath(assetPath);
 
-            if (_assetEntities.TryGetValue(normalizedPath, out AssetEntity<Object> assetEntity))
+            if (_assetEntities.TryGetValue(normalizedPath, out AssetEntity assetEntity))
             {
                 if (assetEntity.RemoveRef())
                 {

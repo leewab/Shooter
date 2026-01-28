@@ -5,25 +5,25 @@ namespace GameUI
 {
     public partial class UIDefine
     {
-        public UIDefine()
+        public static void Init()
         {
             UIInfos.Add(
-                nameof(UIGameResultPanel), 
+                nameof(UIGameFailedPanel), 
                 new UIInfo()
                 {
-                    UIPath = "UIGameResultPanel",
+                    UIPath = "UIGameFailedPanel",
                     PanelType = PanelType.Popup,
                 }
             );
             
-            // UIInfos.Add(
-            //     nameof(UIGameResultPanel), 
-            //     new UIInfo()
-            //     {
-            //         UIPath = "UIGameResultPanel",
-            //         PanelType = PanelType.Popup,
-            //     }
-            // );
+            UIInfos.Add(
+                nameof(UIGameSuccessPanel), 
+                new UIInfo()
+                {
+                    UIPath = "UIGameSuccessPanel",
+                    PanelType = PanelType.Popup,
+                }
+            );
         }
 
     }

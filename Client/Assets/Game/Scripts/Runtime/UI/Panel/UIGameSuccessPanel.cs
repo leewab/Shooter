@@ -1,12 +1,11 @@
 ﻿using Framework.UIFramework;
 using Gameplay;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace GameUI
 {
-    public class UIGameResultPanel : UIPanel
+    public class UIGameSuccessPanel : UIPanel
     {
         [Header("UI组件")]
         [SerializeField] private Button btnFinish;
@@ -17,9 +16,9 @@ namespace GameUI
         protected override void OnAwake()
         {
             // 绑定按钮事件
-            btnFinish.SetOnClick(OnCloseButtonClick);
+            btnFinish.SetOnClick(OnFinishButtonClick);
             btnAgain.SetOnClick(OnAgainButtonClick);
-            panelName = "UIGameResultPanel";
+            panelName = "UIGameSuccessPanel";
         }
 
         protected override void OnInitialize()
@@ -30,14 +29,14 @@ namespace GameUI
 
         protected override void OnOpen(object args)
         {
-            // 打开时的逻辑
-            Debug.Log($"[ExamplePanel] Opened with args: {args}");
-
-            // 如果有传入参数，可以在这里处理
-            if (args is string message)
-            {
-                titleText?.SetTextSafe(message);
-            }
+            // // 打开时的逻辑
+            // Debug.Log($"[ExamplePanel] Opened with args: {args}");
+            //
+            // // 如果有传入参数，可以在这里处理
+            // if (args is string message)
+            // {
+            //     titleText?.SetTextSafe(message);
+            // }
 
             // 播放淡入动画
             if (canvasGroup != null)
@@ -73,15 +72,16 @@ namespace GameUI
             Debug.Log($"[ExamplePanel] Resumed");
         }
 
-        private void OnCloseButtonClick()
+        private void OnFinishButtonClick()
         {
             Close();
+            LevelManager.Instance.StopGame();
         }
 
         private void OnAgainButtonClick()
         {
             Close();
-            GameController.Instance.RestartGame();
+            LevelManager.Instance.StartNextLevel();
         }
         
     }

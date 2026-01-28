@@ -17,17 +17,19 @@ public class TurretData
     // 是否存活（未被消除）
     public bool IsAlive { get; set; } 
     // 所在列（0/1/2，固定3列）
-    public int Column { get; set; } 
+    public int Col { get; set; } 
     // 所在列内的位置索引（前置→后置：0→n-1）
-    public int PositionIndex { get; set; } 
+    public int Row { get; set; } 
+    public TurretInfo TurretInfo { get; set; }
 
-    public TurretData(int index, int id, int column, int positionIndex)
+    public TurretData(int index, int id, int col, int row, TurretInfo turretInfo)
     {
         Index = index;
         Id = id;
-        Column = column;
-        PositionIndex = positionIndex;
+        Col = col;
+        Row = row;
         IsAlive = true; // 初始化默认存活
+        TurretInfo = turretInfo;
     }
 }
 
@@ -48,7 +50,7 @@ public class TurretHandler : SingletonMono<TurretHandler>
     private int _rowCount = 10;
     private LayerMask targetLayer;
     // 核心网格数据：[列索引][列内炮台列表]，保证每列独立管理、补位
-    private List<List<TurretData>> _turretDataList;
+    private TurretData[,] _turretDataList;
 
     // 炮台移除
     public event Action<int> OnRefreshTurret;
@@ -72,11 +74,7 @@ public class TurretHandler : SingletonMono<TurretHandler>
             _turretSeatList[i].SetActive(_turretSeatLock[i] == 0);
         }
     }
-
-    /// <summary>
-    /// 初始化生成3×n炮台网格（核心初始化算法）
-    /// </summary>
-    /// <param name="rowCount">竖向行数n（每列炮台最大数量，必须>0）</param>
+    
     private void InitTurretGrid()
     {
         // 1. 参数校验
@@ -86,23 +84,27 @@ public class TurretHandler : SingletonMono<TurretHandler>
         }
 
         int index = 0;
-        _turretDataList = new List<List<TurretData>>(_columnCount);
-        for (int column = 0; column < _columnCount; column++)
+        var dragonArr = DragonManager.Instance.GetDragonBoneType();
+        var difficulty = LevelManager.Instance.GetCurrentDifficulty();
+        var turretMatrixGenerator = new TurretMatrixGenerator();
+        var turretMatrix = turretMatrixGenerator.GenerateTurretMatrix(dragonArr, difficulty);
+        var rowLength = turretMatrix.GetLength(0);
+        var colLength = turretMatrix.GetLength(1);
+        _turretDataList = new TurretData[rowLength,colLength];
+        for (int i = 0; i < rowLength; i++)
         {
-            List<TurretData> columnTurrets = new List<TurretData>(_rowCount);
-            for (int positionIndex = 0; positionIndex < _rowCount; positionIndex++)
+            for (int j = 0; j < colLength; j++)
             {
-                int randomTurretId = TurretManager.Instance.GetRandomTurretId();
+                var turretInfo = turretMatrix[i, j];
                 TurretData newTurretData = new TurretData(
                     index: index++,
-                    id:randomTurretId,
-                    column: column,
-                    positionIndex: positionIndex
+                    id:turretInfo.Id,
+                    col: j,
+                    row: i,
+                    turretInfo: turretInfo
                 );
-                columnTurrets.Add(newTurretData);
+                _turretDataList[i, j] = newTurretData;
             }
-
-            _turretDataList.Add(columnTurrets);
         }
 
         _turretsGrid.InitializeTurrets(_turretDataList);
@@ -120,31 +122,20 @@ public class TurretHandler : SingletonMono<TurretHandler>
         {
             return false;
         }
+        
+        int rowLength = _turretDataList.GetLength(0);
+        int colLength = _turretDataList.GetLength(1);
 
-        int column = targetTurretData.Column;
-        int targetPos = targetTurretData.PositionIndex;
+        int colIndex = targetTurretData.Col;
+        int rowIndex = targetTurretData.Row;
 
         // 2. 校验列的合法性（0~2）
-        if (column < 0 || column >= _columnCount)
+        if (colIndex < 0 || colIndex >= colLength)
         {
             return false;
         }
 
-        List<TurretData> columnTurrets = _turretDataList[column];
-
-        // 3. 关键校验：目标炮台是否为「当前列有效前置」（无存活炮台在其更前方）
-        bool isFrontValid = true;
-        for (int pos = 0; pos < targetPos; pos++)
-        {
-            if (columnTurrets[pos].IsAlive)
-            {
-                // 目标炮台前方有存活炮台，不属于可消除的「前置炮台」
-                isFrontValid = false;
-                break;
-            }
-        }
-
-        if (!isFrontValid)
+        if (rowIndex != 0)
         {
             return false;
         }
@@ -153,48 +144,18 @@ public class TurretHandler : SingletonMono<TurretHandler>
         targetTurretData.IsAlive = false;
 
         // 5. 触发当前列的自动补位逻辑
-        AutoFillColumn(column);
-
+        int index = 0;
+        for (int i = 0; i < rowLength; i++)
+        {
+            var columnTurrets = _turretDataList[i, colIndex];
+            if (columnTurrets != null && columnTurrets.IsAlive)
+            {
+                columnTurrets.Row = index++;
+            }
+        }
+        
+        OnRefreshTurret?.Invoke(colIndex);
         return true;
-    }
-
-    /// <summary>
-    /// 指定列的炮台自动向前补位（核心补位算法）
-    /// </summary>
-    /// <param name="column">待补位的列索引（0~2）</param>
-    private void AutoFillColumn(int column)
-    {
-        // 1. 校验列的合法性
-        if (column < 0 || column >= _columnCount)
-        {
-            return;
-        }
-
-        List<TurretData> columnTurrets = _turretDataList[column];
-
-        // 步骤1：筛选当前列所有存活的炮台（后置炮台集合）
-        List<TurretData> aliveTurrets = columnTurrets.Where(t => t.IsAlive).ToList();
-
-        // 步骤2：重置当前列所有炮台状态（先标记为全部未存活、清空位置）
-        foreach (TurretData turret in columnTurrets)
-        {
-            turret.IsAlive = false;
-        }
-
-        // 步骤3：后置存活炮台向前补位，填充到列的最前方（从positionIndex=0开始）
-        for (int newPos = 0; newPos < aliveTurrets.Count; newPos++)
-        {
-            TurretData fillTurretData = aliveTurrets[newPos];
-            // 更新炮台的实际位置索引（向前补位）
-            fillTurretData.PositionIndex = newPos;
-            // 标记为存活，完成补位
-            columnTurrets[newPos] = fillTurretData;
-            columnTurrets[newPos].IsAlive = true;
-        }
-
-        // 扩展：同步更新视觉视图（如移动炮台的坐标位置，对应新的positionIndex）
-        // SyncColumnViewToGrid(column);
-        OnRefreshTurret?.Invoke(column);
     }
     
     private void OnRaycastClick()
@@ -234,29 +195,20 @@ public class TurretHandler : SingletonMono<TurretHandler>
                 Debug.LogError("当前炮塔已被激活！");
                 return;
             }
-            
-            var seat = GetTurretSeat();
-            if (seat != null)
-            {
-                seat.SetupTurret(turret);
-            }
+
+            SetupTurret(turret);
         }
     }
 
-    
-    /// <summary>
-    /// 清空指定列的所有炮台（重置状态）
-    /// </summary>
-    private void ClearColumn(int column)
+    private void SetupTurret(TurretEntity turret)
     {
-        if (_turretDataList == null) return;
-        if (column < 0 || column >= _columnCount) return;
-        foreach (TurretData turret in _turretDataList[column])
+        var seat = GetTurretSeat();
+        if (seat != null)
         {
-            turret.IsAlive = false;
+            bool isSuccess = seat.SetupTurret(turret);
+            if (!isSuccess) SetupTurret(turret);
         }
     }
-    
 
     public void InitTurret()
     {
@@ -269,40 +221,22 @@ public class TurretHandler : SingletonMono<TurretHandler>
     /// </summary>
     public void ClearAllGrid()
     {
-        for (int column = 0; column < _columnCount; column++)
+        if (_turretDataList == null) return;
+        var rowLength = _turretDataList.GetLength(0);
+        var colLength = _turretDataList.GetLength(1);
+        for (int i = 0; i < rowLength; i++)
         {
-            ClearColumn(column);
-        }
-    }
-
-    /// <summary>
-    /// 查询指定列的当前最前置存活炮台
-    /// </summary>
-    public TurretData GetFrontTurret(int column)
-    {
-        if (column < 0 || column >= _columnCount) return null;
-        foreach (TurretData turret in _turretDataList[column])
-        {
-            if (turret.IsAlive)
+            for (int j = 0; j < colLength; j++)
             {
-                // 第一个存活的即为最前置
-                return turret; 
+                _turretDataList[i, j].IsAlive = false;
             }
         }
-
-        // 该列无存活炮台
-        return null; 
     }
 
     public void ClearTurret()
     {
         if (_turretDataList != null)
         {
-            foreach (var turretList in _turretDataList)
-            {
-                turretList.Clear();
-            }
-            _turretDataList.Clear();
             _turretDataList = null;
         }
 

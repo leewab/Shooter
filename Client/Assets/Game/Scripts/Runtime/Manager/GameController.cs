@@ -1,9 +1,7 @@
 using System;
 using Framework.UIFramework;
-using Gameplay;
 using GameUI;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Gameplay
 {
@@ -54,6 +52,7 @@ namespace Gameplay
         {
             if (dragonController == null) dragonController = FindObjectOfType<DragonController>();
             if (turretsHandler == null) turretsHandler = FindObjectOfType<TurretHandler>();
+            UIDefine.Init();
             RegisterEvents();
         }
 
@@ -138,15 +137,12 @@ namespace Gameplay
         public void EndGame(bool win)
         {
             CurrentState = GameState.GameOver;
-
             if (dragonController != null)
             {
                 dragonController.StopMoving();
             }
-
-            UIManager.Open<UIGameResultPanel>(win);
+            
             OnGameEnd?.Invoke(win);
-
             Debug.Log($"[GameController] Game End - Win: {win}");
         }
 

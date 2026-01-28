@@ -63,7 +63,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
             targetObj = objectQueue.Dequeue();
             if (targetObj != null)
             {
-                Debug.Log("对象池去除 " + prefab.name + _poolDict[prefab].Count);
+                // Debug.Log("对象池去除 " + prefab.name + _poolDict[prefab].Count);
                 var objTransform = targetObj.transform;
                 objTransform.SetParent(parent);
                 objTransform.position = position;
@@ -110,6 +110,8 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
         // 3. 重置对象状态并回收
         var objTransform = obj.transform;
         objTransform.SetParent(_poolRoot); // 归位到对象池根节点
+        objTransform.localScale = Vector3.one;
+        objTransform.rotation = Quaternion.Euler(Vector3.zero);
         obj.gameObject.SetActive(false);   // 隐藏对象
         _poolDict[prefab].Enqueue(obj);    // 加入缓存队列
     }

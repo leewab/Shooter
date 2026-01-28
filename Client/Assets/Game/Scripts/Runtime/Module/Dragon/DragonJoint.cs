@@ -58,7 +58,7 @@ public class DragonJoint : MonoBehaviour
         _isAlive = true;
         _jointData = jointData;
         _confDragonJoint = jointData.ConfDragonJoint;
-        _currentHealth = _confDragonJoint?.Health ?? 0;
+        _currentHealth = -1;
         JointIndex = jointData.JointIndex;
         SetColorType(jointData.ColorType);
     }
@@ -81,6 +81,11 @@ public class DragonJoint : MonoBehaviour
             meshRender.material.SetFloat("_FresnelPower", 0.862f);
             meshRender.material.SetFloat("_FresnelIntensity", 0.641f);
         }
+    }
+
+    public void ActiveAlive()
+    {
+        _currentHealth = _confDragonJoint?.Health ?? 0;
     }
     
     // 受到伤害

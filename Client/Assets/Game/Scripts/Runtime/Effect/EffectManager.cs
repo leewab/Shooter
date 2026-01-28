@@ -1,28 +1,14 @@
 ﻿using System.Collections.Generic;
 using ResKit;
-using UnityEditor;
 using UnityEngine;
 
 namespace Gameplay
 {
-    public class EffectManager : Singleton<EffectManager>
+    public class EffectManager : SingletonMono<EffectManager>
     {
         #region Effect
 
         private static readonly string EffectPrefabPath = $"{PathDefine.PATH_RES_PRODUCT_DIR}/Effects/";
-
-        private Transform _effectPool;
-        public Transform EffectPool
-        {
-            get
-            {
-                if (_effectPool == null)
-                {
-                    _effectPool = new GameObject("EffectPool").transform;
-                }
-                return _effectPool;
-            }
-        }
 
         private Dictionary<string, GameObject> _effectPrefabs = new Dictionary<string, GameObject>();
 
@@ -34,7 +20,6 @@ namespace Gameplay
             if (string.IsNullOrEmpty(effectName)) return null;
 
             GameObject effectPrefab = null;
-
             // 从缓存中获取
             if (_effectPrefabs.ContainsKey(effectName))
             {
@@ -43,7 +28,7 @@ namespace Gameplay
             else
             {
                 // 加载预制体
-                string fullPath = EffectPrefabPath + effectName + ".prefab";
+                string fullPath = $"{EffectPrefabPath}{effectName}/{effectName}.prefab";
                 effectPrefab = ResourceManager.Instance.Load<GameObject>(fullPath);
                 if (effectPrefab != null)
                 {
@@ -56,10 +41,9 @@ namespace Gameplay
                 }
             }
 
-            // 实例化特效
-            return Object.Instantiate(effectPrefab, position, rotation, EffectPool);
+            return Instantiate(effectPrefab, position, rotation, transform);
         }
-
+ 
         #endregion
     }
 }

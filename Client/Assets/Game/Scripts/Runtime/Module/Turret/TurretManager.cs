@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using GameConfig;
+﻿using GameConfig;
 using ResKit;
-using UnityEditor;
 using UnityEngine;
 
 namespace Gameplay
@@ -42,9 +40,10 @@ namespace Gameplay
             return Color.white;
         }
 
-        public int GetRandomTurretId()
+        
+        public Sprite GetTurretSprite(string spriteName)
         {
-            return Random.Range(0, 4);
+            return ResourceManager.Instance.Load<Sprite>($"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Icon/Turrets/{spriteName}");
         }
 
 

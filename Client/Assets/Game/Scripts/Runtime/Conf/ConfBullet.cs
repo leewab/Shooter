@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfBullet
 // 表描述: 子弹
-// 生成时间: 2026-01-18 20:16:32
+// 生成时间: 2026-01-27 23:23:00
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -55,12 +55,6 @@ namespace GameConfig
         public string HitEffectName { get; set; } = string.Empty;
 
         /// <summary>
-        /// 命中特效持续时间
-        /// </summary>
-        [JsonProperty("HitEffectDuration")]
-        public float HitEffectDuration { get; set; } = 0f;
-
-        /// <summary>
         /// 命中音效名称
         /// </summary>
         [JsonProperty("HitSoundName")]
@@ -84,18 +78,24 @@ namespace GameConfig
         [JsonProperty("ScreenShakeDuration")]
         public float ScreenShakeDuration { get; set; } = 0f;
 
-        [JsonProperty("EffectName")]
-        public string EffectName { get; set; } = string.Empty;
+        /// <summary>
+        /// Miss特效名称
+        /// </summary>
+        [JsonProperty("MissEffectName")]
+        public string MissEffectName { get; set; } = string.Empty;
 
-        [JsonProperty("AudioName")]
-        public string AudioName { get; set; } = string.Empty;
+        /// <summary>
+        /// Miss音效名称
+        /// </summary>
+        [JsonProperty("MissSoundName")]
+        public string MissSoundName { get; set; } = string.Empty;
 
         /// <summary>
         /// 返回对象的字符串表示
         /// </summary>
         public override string ToString()
         {
-            return $"ConfBullet " + string.Join(", ", new string[] { $"Id={Id}", $"Damage={Damage}", $"Speed={Speed}", $"MaxTravelDistance={MaxTravelDistance}", $"StartScale={StartScale}", $"ScaleDuration={ScaleDuration}", $"HitEffectName={HitEffectName}", $"HitEffectDuration={HitEffectDuration}", $"HitSoundName={HitSoundName}", $"HitStopDuration={HitStopDuration}", $"ScreenShakeIntensity={ScreenShakeIntensity}", $"ScreenShakeDuration={ScreenShakeDuration}", $"EffectName={EffectName}", $"AudioName={AudioName}" });
+            return $"ConfBullet " + string.Join(", ", new string[] { $"Id={Id}", $"Damage={Damage}", $"Speed={Speed}", $"MaxTravelDistance={MaxTravelDistance}", $"StartScale={StartScale}", $"ScaleDuration={ScaleDuration}", $"HitEffectName={HitEffectName}", $"HitSoundName={HitSoundName}", $"HitStopDuration={HitStopDuration}", $"ScreenShakeIntensity={ScreenShakeIntensity}", $"ScreenShakeDuration={ScreenShakeDuration}", $"MissEffectName={MissEffectName}", $"MissSoundName={MissSoundName}" });
         }
     }
 }

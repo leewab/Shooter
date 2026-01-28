@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfTurret
 // 表描述: 炮台
-// 生成时间: 2026-01-18 20:16:32
+// 生成时间: 2026-01-27 23:23:00
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -19,6 +19,12 @@ namespace GameConfig
     public class ConfTurret  : BaseConf
     {
         /// <summary>
+        /// 图片名称
+        /// </summary>
+        [JsonProperty("Icon")]
+        public string Icon { get; set; } = string.Empty;
+
+        /// <summary>
         /// 颜色类型
         /// </summary>
         [JsonProperty("ColorType")]
@@ -33,8 +39,8 @@ namespace GameConfig
         /// <summary>
         /// 每次攻击伤害
         /// </summary>
-        [JsonProperty("DamagePerShot")]
-        public int DamagePerShot { get; set; } = 0;
+        [JsonProperty("AttackValue")]
+        public int AttackValue { get; set; } = 0;
 
         /// <summary>
         /// 最大攻击数量
@@ -67,12 +73,6 @@ namespace GameConfig
         public float RecoilRotation { get; set; } = 0f;
 
         /// <summary>
-        /// 炮口闪光持续时间
-        /// </summary>
-        [JsonProperty("MuzzleFlashDuration")]
-        public float MuzzleFlashDuration { get; set; } = 0f;
-
-        /// <summary>
         /// 炮口特效名称
         /// </summary>
         [JsonProperty("MuzzleEffectName")]
@@ -89,7 +89,7 @@ namespace GameConfig
         /// </summary>
         public override string ToString()
         {
-            return $"ConfTurret " + string.Join(", ", new string[] { $"Id={Id}", $"ColorType={ColorType}", $"AttackCooldown={AttackCooldown}", $"DamagePerShot={DamagePerShot}", $"MaxHitNum={MaxHitNum}", $"FireSound={FireSound}", $"BulletName={BulletName}", $"RecoilDistance={RecoilDistance}", $"RecoilDuration={RecoilDuration}", $"RecoilRotation={RecoilRotation}", $"MuzzleFlashDuration={MuzzleFlashDuration}", $"MuzzleEffectName={MuzzleEffectName}", $"MuzzleEffectScale={MuzzleEffectScale}" });
+            return $"ConfTurret " + string.Join(", ", new string[] { $"Id={Id}", $"Icon={Icon}", $"ColorType={ColorType}", $"AttackCooldown={AttackCooldown}", $"AttackValue={AttackValue}", $"MaxHitNum={MaxHitNum}", $"FireSound={FireSound}", $"BulletName={BulletName}", $"RecoilDistance={RecoilDistance}", $"RecoilDuration={RecoilDuration}", $"RecoilRotation={RecoilRotation}", $"MuzzleEffectName={MuzzleEffectName}", $"MuzzleEffectScale={MuzzleEffectScale}" });
         }
     }
 }

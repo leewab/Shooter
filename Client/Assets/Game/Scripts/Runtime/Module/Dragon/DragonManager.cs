@@ -66,5 +66,19 @@ namespace Gameplay
             return null;
         }
 
+
+        public DragonBoneInfo[] GetDragonBoneType()
+        {
+            var levelId = LevelManager.Instance.GetCurrentLevel();
+            var confDragon = ConfDragon.GetConf<ConfDragon>(levelId);
+            int boneLen = confDragon.DragonJointColors.Length;
+            var boneInfos = new DragonBoneInfo[boneLen];
+            for (int i = 0; i < boneLen; i++)
+            {
+                boneInfos[i] = new DragonBoneInfo(confDragon.DragonJointColors[i], 1);
+            }
+            
+            return boneInfos;
+        }
     }
 }

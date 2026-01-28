@@ -5,22 +5,13 @@ using Gameplay;
 using GameUI;
 using ResKit;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class DragonController : MonoBehaviour
 {
-    [FormerlySerializedAs("pathData")] [Header("Path Settings")]
-    public PathPointData _PathData;
-    
-    [Header("Dragon Settings")] 
-    public GameObject jointHead;
-    public GameObject jointTail;
-    public GameObject jointBody;
-    
-    private const string PathDataPath = "Product/Game/PathData/Game.asset";
-    private const string DragonHeadPath = "Product/Game/Prefab/DragonHead.prefab";
-    private const string DragonTailPath = "Product/Game/Prefab/DragonTail.prefab";
-    private const string DragonBodyPath = "Product/Game/Prefab/DragonPart.prefab";
+    private PathPointData _PathData;
+    private GameObject jointHead;
+    private GameObject jointTail;
+    private GameObject jointBody;
     
     // 所有关节
     private List<DragonJoint> allDragonJoints;
@@ -36,13 +27,14 @@ public class DragonController : MonoBehaviour
     private float colorTimer = 0f;
     private float _CurSpeed;
     private float _SpeedChangeTimer;
+    private int _CurLevelID;
 
     void Start()
     {
-        if (_PathData == null) _PathData = ResourceManager.Instance.Load<PathPointData>(PathDataPath);
-        if (jointHead == null) jointHead = ResourceManager.Instance.Load<GameObject>(DragonHeadPath);
-        if (jointTail == null) jointTail = ResourceManager.Instance.Load<GameObject>(DragonTailPath);
-        if (jointBody == null) jointBody = ResourceManager.Instance.Load<GameObject>(DragonBodyPath);
+        if (_PathData == null) _PathData = ResourceManager.Instance.Load<PathPointData>(PathDefine.PathDataPath);
+        if (jointHead == null) jointHead = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonHeadPath);
+        if (jointTail == null) jointTail = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonTailPath);
+        if (jointBody == null) jointBody = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonBodyPath);
     }
     
     private void Update()
@@ -78,7 +70,8 @@ public class DragonController : MonoBehaviour
     private void InitializeDragon()
     {
         if (_PathData == null) return;
-        _ConfDragon = ConfDragon.GetConf<ConfDragon>(0);
+        _CurLevelID = LevelManager.Instance.GetCurrentLevel();
+        _ConfDragon = ConfDragon.GetConf<ConfDragon>(_CurLevelID);
         _CurSpeed = _ConfDragon.MaxMoveSpeed;
         _SpeedChangeTimer = 0f;
         ClearJoints();
@@ -131,7 +124,8 @@ public class DragonController : MonoBehaviour
             joint.onDestroyed.RemoveListener(OnJointDestroyed);
             joint.onDestroyed.AddListener(OnJointDestroyed);
         }
-
+        
+        jointObj.SetActive(false);
         joint.SetData(new DragonJointData()
         {
             JointType = type,
@@ -223,7 +217,11 @@ public class DragonController : MonoBehaviour
         {
             DragonJoint joint = allDragonJoints[i];
             if (joint == null) continue;
-            if (!joint.gameObject.activeSelf) joint.gameObject.SetActive(true);
+            if (!joint.gameObject.activeSelf)
+            {
+                joint.gameObject.SetActive(true);
+                joint.ActiveAlive();
+            }
             // 计算目标距离
             float targetDistance = tailDistance + i * _ConfDragon.DragonJointSpacing;
             
@@ -277,7 +275,7 @@ public class DragonController : MonoBehaviour
     {
         Debug.Log("GameOver");
         DragonManager.Instance.OnSuccessEvent?.Invoke(false);
-        UIManager.Open<UIGameResultPanel>("GameOverPanel");
+        UIManager.Open<UIGameFailedPanel>();
         StopMoving();
     }
 
@@ -285,7 +283,7 @@ public class DragonController : MonoBehaviour
     {
         Debug.Log("OnGameSuccess");
         DragonManager.Instance.OnSuccessEvent?.Invoke(true);
-        UIManager.Open<UIGameResultPanel>("OnGameSuccess");
+        UIManager.Open<UIGameSuccessPanel>();
         StopMoving();
     }
 

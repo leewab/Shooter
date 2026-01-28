@@ -9,7 +9,7 @@ namespace ResKit
     /// <summary>
     /// Asset实体类，负责Asset资源的加载、引用计数和卸载
     /// </summary>
-    public class AssetEntity<T> where T : UnityEngine.Object
+    public class AssetEntity
     {
         /// <summary>
         /// 资源路径
@@ -67,42 +67,58 @@ namespace ResKit
         /// 同步加载资源
         /// </summary>
         /// <returns>加载的资源</returns>
-        public T Load()
+        public T Load<T>() where T : UnityEngine.Object
         {
             switch (_loadMode)
             {
 #if UNITY_EDITOR
                 case LoadMode.Editor_AssetDatabase:
-                    return LoadWithAsset();
+                    return LoadWithAsset<T>();
                 case LoadMode.Editor_LocalBundle:
 #endif
                 case LoadMode.Bundle:
-                    return LoadWithBundle();
+                    return LoadWithBundle<T>();
                 case LoadMode.WeChat:
                 case LoadMode.ResourceLoad:
-                    return LoadWithResource();
+                    return LoadWithResource<T>();
             }
 
-            return null;
+            return Asset as T;
         }
 
 #if UNITY_EDITOR
-        private T LoadWithAsset()
+        private T LoadWithAsset<T>() where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(AssetPath)) return null;
-            return UnityEditor.AssetDatabase.LoadAssetAtPath<T>(AssetPath);
+            if (IsLoaded && Asset != null)
+            {
+                AddRef();
+                return Asset as T;
+            }
+            Asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(AssetPath);
+            IsLoaded = true;
+            RefCount = 1;
+            return (T)Asset;
         }
 #endif
         
-        private T LoadWithResource()
+        private T LoadWithResource<T>() where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(AssetPath)) return null;
+            if (IsLoaded && Asset != null)
+            {
+                AddRef();
+                return Asset as T;
+            }
             string assetPath = Path.ChangeExtension(AssetPath.Replace("Assets/Res/", ""), null);
-            Debug.Log("Resource 加载：" + assetPath);
-            return Resources.Load<T>(assetPath);
+            // Debug.Log("Resource 加载：" + assetPath);
+            Asset = Resources.Load<T>(assetPath);
+            IsLoaded = true;
+            RefCount = 1;
+            return (T)Asset;
         }
 
-        private T LoadWithBundle()
+        private T LoadWithBundle<T>() where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(BundleName)) return null;
             
@@ -159,13 +175,13 @@ namespace ResKit
         /// </summary>
         /// <param name="callback">加载完成回调</param>
         /// <returns>协程</returns>
-        public IEnumerator LoadAsync(Action<T> callback)
+        public IEnumerator LoadAsync(Action<UnityEngine.Object> callback)
         {
             switch (_loadMode)
             {
 #if UNITY_EDITOR
                 case LoadMode.Editor_AssetDatabase:
-                    var asset = LoadWithAsset();
+                    var asset = LoadWithAsset<UnityEngine.Object>();
                     callback?.Invoke(asset);
                     yield break;
                 case LoadMode.Editor_LocalBundle:
@@ -175,8 +191,7 @@ namespace ResKit
                     yield return LoadAsyncWithBundle(callback);
                     break;
                 case LoadMode.ResourceLoad:
-                    var asset1 = LoadWithResource();
-                    callback?.Invoke(asset1);
+                    callback?.Invoke(LoadWithResource<UnityEngine.Object>());
                     yield break;
             }
 
@@ -188,12 +203,12 @@ namespace ResKit
         /// </summary>
         /// <param name="callback">加载完成回调</param>
         /// <returns>协程</returns>
-        private IEnumerator LoadAsyncWithBundle(Action<T> callback)
+        private IEnumerator LoadAsyncWithBundle(Action<UnityEngine.Object> callback)
         {
             if (IsLoaded)
             {
                 AddRef();
-                callback?.Invoke(Asset as T);
+                callback?.Invoke(Asset);
                 yield break;
             }
 
@@ -264,14 +279,14 @@ namespace ResKit
 
         #region 异步加载回调管线
 
-        private Dictionary<string, List<System.Action<T>>> _asyncLoadingPipeline = null;
+        private Dictionary<string, List<System.Action<UnityEngine.Object>>> _asyncLoadingPipeline = null;
 
-        private void AddAsyncLoadPipeline(Action<T> callback)
+        private void AddAsyncLoadPipeline(Action<UnityEngine.Object> callback)
         {
-            if (_asyncLoadingPipeline == null) _asyncLoadingPipeline = new Dictionary<string, List<Action<T>>>();
+            if (_asyncLoadingPipeline == null) _asyncLoadingPipeline = new Dictionary<string, List<Action<UnityEngine.Object>>>();
             if (!_asyncLoadingPipeline.TryGetValue(AssetPath, out var callList))
             {
-                _asyncLoadingPipeline.Add(AssetPath, new List<Action<T>>() { callback });
+                _asyncLoadingPipeline.Add(AssetPath, new List<Action<UnityEngine.Object>>() { callback });
             }
             else
             {
@@ -301,7 +316,7 @@ namespace ResKit
             {
                 foreach (var action in actionList)
                 {
-                    action?.Invoke(Asset as T);
+                    action?.Invoke(Asset);
                 }
             }
         }

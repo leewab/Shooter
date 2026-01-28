@@ -6,36 +6,49 @@ namespace Gameplay
     {
         [SerializeField] private GameObject _turretLock;
 
-        private bool _isActive = false;
-        public bool IsActive => _isActive;
-        
-        private bool _isOccupy = false;
-        public bool IsOccupy => _isOccupy;
+        public bool IsActive;
+        public bool IsOccupy;
 
         public void SetActive(bool isActive)
         {
-            this._isActive = isActive;
+            this.IsActive = isActive;
             this.gameObject.SetActive(true);
             this._turretLock?.SetActive(!isActive);
         }
 
         public void SetOccupy(bool isOccupy)
         {
-            this._isOccupy = isOccupy;
+            if (!isOccupy)
+            {
+                // Debug.LogError(this.gameObject.name + "位置被释放！");
+                var turret = this.transform.GetComponentsInChildren<TurretEntity>();
+                if (turret != null && turret.Length > 0)
+                {
+                    Debug.LogError("出现严重问题，Seat被释放了，但是还存在TurretEntity!");
+                    Application.Pause();
+                }
+            }
+            this.IsOccupy = isOccupy;
         }
 
         public bool SetupTurret(TurretEntity turret)
         {
-            if (!this._isActive)
+            if (!this.IsActive)
             {
                 Debug.LogWarning("TurretSeat::SetTurret: Turret is not active.");
                 return false;
             }
+
+            if (this.IsOccupy)
+            {
+                Debug.LogWarning("TurretSeat::SetTurret: Turret is Occupy.");
+                return false;
+            }
             
-            turret.SetupTurret(this.transform);
-            turret.OnDeadEvent?.RemoveListener(OnTurretDeadEvent);
-            turret.OnDeadEvent?.AddListener(OnTurretDeadEvent);
             SetOccupy(true);
+            turret.SetupTurret(this.transform);
+            turret.OnDeadEvent -= OnTurretDeadEvent;
+            turret.OnDeadEvent += OnTurretDeadEvent;
             return true;
         }
 

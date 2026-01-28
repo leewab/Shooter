@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using DG.Tweening;
 using GameConfig;
-using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace Gameplay
 {
@@ -10,37 +11,27 @@ namespace Gameplay
         private TurretData _turretData;
         private ConfTurret _confTurret;
         
+        [SerializeField] private Text txtBullet;
         [SerializeField] private Transform firePoint;
         [SerializeField] private SpriteRenderer spriteRenderer;
         
-        public UnityEvent<int> OnDeadEvent;
-        public UnityEvent<int> OnUpdateHitNum;
+        public Action<int> OnDeadEvent;
+        public Action<int> OnUpdateHitNum;
 
         private int _delayActive = 30;
         private int _currentHitNum = 0;
         private float _attackTimer = 0f;
-
         private Tween recoilPositionTween; 
         
-        private bool _isActive = false;
-        public bool IsActive => _isActive;
-        
-        private bool _isFirst = false;
-        public bool IsFirst => _isFirst;
+        public bool IsActive;
+        public bool IsFirst;
 
         private void Update()
         {
-            if (!_isActive) return;
+            if (!IsActive) return;
             if (_delayActive > 0)
             {
                 _delayActive--;
-                return;
-            }
-
-            if (_currentHitNum <= 0)
-            {
-                _isActive = false;
-                Invoke(nameof(RecycleTurret), 1);
                 return;
             }
 
@@ -53,18 +44,11 @@ namespace Gameplay
             PerformAttack();
         }
 
-        private void InitializeTurretConf(int confId)
-        {
-            _confTurret = ConfTurret.GetConf<ConfTurret>(confId);
-            _currentHitNum = _confTurret.MaxHitNum;
-            OnUpdateHitNum?.Invoke(_currentHitNum);
-        }
-
         private void InitializeComponents()
         {
             if (spriteRenderer != null)
             {
-                spriteRenderer.color = TurretManager.Instance.GetColor(_confTurret.ColorType);
+                spriteRenderer.sprite = TurretManager.Instance.GetTurretSprite(_confTurret.Icon);
             }
             if (firePoint == null)
             {
@@ -93,8 +77,10 @@ namespace Gameplay
 
             var bullet = BulletManager.Instance.InstantiateBullet(_confTurret.BulletName, firePoint.position, Quaternion.identity) as BulletEntity;
             bullet?.Init(_confTurret.Id, _confTurret.ColorType, direction, joint.transform.position);
-
+            bullet?.AddRegister(OnBulletHitCallback);
+            
             _currentHitNum--;
+            txtBullet.text = _currentHitNum.ToString();
             OnUpdateHitNum?.Invoke(_currentHitNum);
         }
 
@@ -119,30 +105,28 @@ namespace Gameplay
                 .SetAutoKill(true);
         }
 
-        // 炮口闪光 - 直接调用，不需要协程
         private void PlayMuzzleFlash()
         {
-            if (string.IsNullOrEmpty(_confTurret.MuzzleEffectName))
-                return;
-
+            if (string.IsNullOrEmpty(_confTurret.MuzzleEffectName)) return;
             // 生成炮口特效
-            GameObject muzzleEffect = EffectManager.Instance.InstantiateEffect(
+            var muzzleEffect = EffectManager.Instance.InstantiateEffect(
                 _confTurret.MuzzleEffectName,
                 firePoint.position,
                 transform.rotation);
-
-            if (muzzleEffect != null)
-            {
-                // 设置特效缩放
-                muzzleEffect.transform.localScale = Vector3.one * _confTurret.MuzzleEffectScale;
-
-                // 自动销毁
-                Destroy(muzzleEffect, _confTurret.MuzzleFlashDuration);
-            }
+        }
+        
+        private void PlayDeadAnimation(float duration)
+        {
+            // 使用 DOTween 平滑复位
+            recoilPositionTween = transform
+                .DOScale(0, duration)
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
         }
 
         private void Clear()
         {
+            OnDeadEvent = null;
             OnUpdateHitNum = null;
             recoilPositionTween?.Kill();
             _turretData = null;
@@ -151,10 +135,21 @@ namespace Gameplay
 
         private void RecycleTurret()
         {
-            _isActive = false;
-            OnDeadEvent?.Invoke(_turretData.Index);
+            IsActive = false;
             TurretManager.Instance.RecycleTurret(this);
+            OnDeadEvent?.Invoke(_turretData.Index);
             Clear();
+        }
+
+        private void OnBulletHitCallback()
+        {
+            if (_currentHitNum <= 0)
+            {
+                IsActive = false;
+                float deadDuration = 0.1f;
+                PlayDeadAnimation(deadDuration);
+                Invoke(nameof(RecycleTurret), deadDuration);
+            }
         }
         
         
@@ -167,7 +162,7 @@ namespace Gameplay
             this.transform.DOKill();
             this.transform.DOLocalMove(Vector3.zero, 0.1f).SetEase(Ease.Linear);
             this._delayActive = 120;
-            this._isActive = true;
+            this.IsActive = true;
             TurretHandler.Instance.EliminateTurret(_turretData);
         }
 
@@ -180,8 +175,11 @@ namespace Gameplay
             TurretData td = (TurretData)parameters[0];
             if (td == null) return;
             _turretData = td;
-            _isFirst = td.PositionIndex == 0;
-            InitializeTurretConf(td.Id);
+            IsFirst = td.Row == 0;
+            _confTurret = ConfTurret.GetConf<ConfTurret>(td.Id);
+            _currentHitNum = _turretData.TurretInfo.CurrentHitNum;
+            txtBullet.text = _currentHitNum.ToString();
+            OnUpdateHitNum?.Invoke(_currentHitNum);
             InitializeComponents();
         }
 

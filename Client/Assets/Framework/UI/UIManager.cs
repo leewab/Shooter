@@ -20,7 +20,7 @@ namespace Framework.UIFramework
         /// </summary>
         public static void Open<T>(object args = null) where T : UIPanel
         {
-            var uiInfo = UIDefine.GetUIInfo(typeof(T).Name);
+            var uiInfo = UIDefine.GetUIInfo<T>();
             UIHandler.Instance.OpenPanel(uiInfo.UIPath, uiInfo.PanelType, args);
         }
 
