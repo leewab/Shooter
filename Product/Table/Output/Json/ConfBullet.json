@@ -1,6 +1,7 @@
 ﻿[
   {
     "Id": 1,
+    "BulletName": "Bullet",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -16,6 +17,7 @@
   },
   {
     "Id": 2,
+    "BulletName": "Bullet",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -31,6 +33,7 @@
   },
   {
     "Id": 3,
+    "BulletName": "Bullet",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -46,6 +49,7 @@
   },
   {
     "Id": 4,
+    "BulletName": "Bullet",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -61,6 +65,7 @@
   },
   {
     "Id": 5,
+    "BulletName": "Bullet",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,

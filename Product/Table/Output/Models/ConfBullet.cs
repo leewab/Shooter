@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfBullet
 // 表描述: 子弹
-// 生成时间: 2026-01-27 23:23:00
+// 生成时间: 2026-02-04 22:32:24
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -19,7 +19,13 @@ namespace GameConfig
     public class ConfBullet  : BaseConf
     {
         /// <summary>
-        /// 伤害
+        /// 子弹名称
+        /// </summary>
+        [JsonProperty("BulletName")]
+        public string BulletName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 伤害值
         /// </summary>
         [JsonProperty("Damage")]
         public int Damage { get; set; } = 0;
@@ -95,7 +101,7 @@ namespace GameConfig
         /// </summary>
         public override string ToString()
         {
-            return $"ConfBullet " + string.Join(", ", new string[] { $"Id={Id}", $"Damage={Damage}", $"Speed={Speed}", $"MaxTravelDistance={MaxTravelDistance}", $"StartScale={StartScale}", $"ScaleDuration={ScaleDuration}", $"HitEffectName={HitEffectName}", $"HitSoundName={HitSoundName}", $"HitStopDuration={HitStopDuration}", $"ScreenShakeIntensity={ScreenShakeIntensity}", $"ScreenShakeDuration={ScreenShakeDuration}", $"MissEffectName={MissEffectName}", $"MissSoundName={MissSoundName}" });
+            return $"ConfBullet " + string.Join(", ", new string[] { $"Id={Id}", $"BulletName={BulletName}", $"Damage={Damage}", $"Speed={Speed}", $"MaxTravelDistance={MaxTravelDistance}", $"StartScale={StartScale}", $"ScaleDuration={ScaleDuration}", $"HitEffectName={HitEffectName}", $"HitSoundName={HitSoundName}", $"HitStopDuration={HitStopDuration}", $"ScreenShakeIntensity={ScreenShakeIntensity}", $"ScreenShakeDuration={ScreenShakeDuration}", $"MissEffectName={MissEffectName}", $"MissSoundName={MissSoundName}" });
         }
     }
 }

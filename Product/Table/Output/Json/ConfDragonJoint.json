@@ -1,22 +1,47 @@
 ﻿[
   {
     "Id": 1,
-    "Health": 1
+    "Health": 3,
+    "Type": 0,
+    "DamageEffect": "",
+    "DamageAudio": "",
+    "DestroyEffect": "",
+    "DestroyAudio": ""
   },
   {
     "Id": 2,
-    "Health": 2
+    "Health": 2,
+    "Type": 1,
+    "DamageEffect": "",
+    "DamageAudio": "",
+    "DestroyEffect": "",
+    "DestroyAudio": ""
   },
   {
     "Id": 3,
-    "Health": 3
+    "Health": 3,
+    "Type": 2,
+    "DamageEffect": "",
+    "DamageAudio": "",
+    "DestroyEffect": "",
+    "DestroyAudio": ""
   },
   {
     "Id": 4,
-    "Health": 4
+    "Health": 2,
+    "Type": 3,
+    "DamageEffect": "",
+    "DamageAudio": "",
+    "DestroyEffect": "",
+    "DestroyAudio": ""
   },
   {
     "Id": 5,
-    "Health": 5
+    "Health": 3,
+    "Type": 4,
+    "DamageEffect": "",
+    "DamageAudio": "",
+    "DestroyEffect": "",
+    "DestroyAudio": ""
   }
 ]
