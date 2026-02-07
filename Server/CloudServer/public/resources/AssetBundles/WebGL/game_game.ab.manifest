@@ -1,0 +1,21 @@
+ManifestFileVersion: 0
+CRC: 156714445
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 7855c118a60682d5522f22535c599a92
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 098bc4a4c1fb824ad9075c2cc37e3e7a
+HashAppended: 0
+ClassTypes:
+- Class: 114
+  Script: {fileID: 11500000, guid: 7101f2798d524778a3fbf1c5bcaf1724, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: Assembly-CSharp
+  ClassName: PathPointData/PathPoint
+Assets:
+- Assets/Res/Product/Game/PathData/Game.asset
+Dependencies: []

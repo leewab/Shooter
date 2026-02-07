@@ -1,0 +1,39 @@
+ManifestFileVersion: 0
+CRC: 3186488704
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: d3a27102652497c1c3aba119cd1b2633
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5f2b5ba968153ca40d2400cbaff5c5f7
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 861a82606e074c94a1541e2bcfa34f9e, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 212
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.PersistentCallGroup
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.UnityEvent`1[System.Int32]
+Assets:
+- Assets/Res/Product/Game/Prefab/Turret.prefab
+Dependencies: []

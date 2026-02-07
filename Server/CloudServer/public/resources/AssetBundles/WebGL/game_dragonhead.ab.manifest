@@ -1,0 +1,40 @@
+ManifestFileVersion: 0
+CRC: 424486609
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 9fec342b0b22b053ba805076963f054a
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 814e5299146673d2763c0b1e3289d0ff
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 299bdd4d9e1e41e393ea099fe29be856, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 212
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.PersistentCallGroup
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.UnityEvent`1[System.Int32]
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.Events.UnityEvent`1[System.Single]
+Assets:
+- Assets/Res/Product/Game/Prefab/DragonHead.prefab
+Dependencies:
+- E:/WorkSpace/Unity/Game/Shooter/Client/Assets/../AssetBundles/StandaloneWindows64/AssetBundles/WebGL/game_longtou.ab

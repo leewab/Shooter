@@ -1,0 +1,77 @@
+ManifestFileVersion: 0
+CRC: 3894468440
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: ui_uigameresultpanel.ab
+      Dependencies: {}
+    Info_1:
+      Name: ui_uiroot.ab
+      Dependencies: {}
+    Info_2:
+      Name: ui_uiturrethud.ab
+      Dependencies:
+        Dependency_0: game_pao.ab
+    Info_3:
+      Name: game_longtou.ab
+      Dependencies: {}
+    Info_4:
+      Name: game_longzhu_01.ab
+      Dependencies: {}
+    Info_5:
+      Name: game_longzhu_02.ab
+      Dependencies: {}
+    Info_6:
+      Name: game_longzhu_03.ab
+      Dependencies: {}
+    Info_7:
+      Name: game_longzhu_04.ab
+      Dependencies: {}
+    Info_8:
+      Name: game_longzhu_05.ab
+      Dependencies: {}
+    Info_9:
+      Name: game_longzhu_06.ab
+      Dependencies: {}
+    Info_10:
+      Name: game_longzhu_07.ab
+      Dependencies: {}
+    Info_11:
+      Name: game_longzhu_08.ab
+      Dependencies: {}
+    Info_12:
+      Name: game_longzhu_09.ab
+      Dependencies: {}
+    Info_13:
+      Name: game_pao.ab
+      Dependencies: {}
+    Info_14:
+      Name: game_game.ab
+      Dependencies: {}
+    Info_15:
+      Name: game_softfresneltoon.ab
+      Dependencies: {}
+    Info_16:
+      Name: game_wx_mobileoptimized.ab
+      Dependencies: {}
+    Info_17:
+      Name: game_bullet.ab
+      Dependencies: {}
+    Info_18:
+      Name: game_dragonhead.ab
+      Dependencies:
+        Dependency_0: game_longtou.ab
+    Info_19:
+      Name: game_dragonpart.ab
+      Dependencies:
+        Dependency_0: game_longzhu_03.ab
+        Dependency_1: game_softfresneltoon.ab
+    Info_20:
+      Name: game_dragontail.ab
+      Dependencies: {}
+    Info_21:
+      Name: game_turret.ab
+      Dependencies: {}
+    Info_22:
+      Name: conf_conf.ab
+      Dependencies: {}

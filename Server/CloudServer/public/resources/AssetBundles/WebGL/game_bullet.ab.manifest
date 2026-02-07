@@ -1,0 +1,35 @@
+ManifestFileVersion: 0
+CRC: 3541834113
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 0b329f2b63f48892594e1235d8cb9852
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 093181d2fc2c57e350b0e5227bd5fbe7
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 7a637653b42041d698e84a8f0ed053a3, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 212
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Res/Product/Game/Prefab/Bullet.prefab
+Dependencies: []

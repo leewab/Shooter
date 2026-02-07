@@ -1,0 +1,150 @@
+{
+    "BuildTime": "2026-01-17 22:28:36",
+    "TotalAssets": 0,
+    "TotalBundles": 23,
+    "Assets": [
+        {
+            "AssetPath": "Assets/Res/Product/UI/UIGameResultPanel.prefab",
+            "BundleName": "ui_uigameresultpanel.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/UI/UIRoot.prefab",
+            "BundleName": "ui_uiroot.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/UI/UITurretHUD.prefab",
+            "BundleName": "ui_uiturrethud.ab",
+            "Dependencies": [
+                "Assets/Res/Product/Game/Icon/pao.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longtou.png",
+            "BundleName": "game_longtou.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_01.png",
+            "BundleName": "game_longzhu_01.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_02.png",
+            "BundleName": "game_longzhu_02.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_03.png",
+            "BundleName": "game_longzhu_03.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_04.png",
+            "BundleName": "game_longzhu_04.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_05.png",
+            "BundleName": "game_longzhu_05.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_06.png",
+            "BundleName": "game_longzhu_06.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_07.png",
+            "BundleName": "game_longzhu_07.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_08.png",
+            "BundleName": "game_longzhu_08.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/longzhu_09.png",
+            "BundleName": "game_longzhu_09.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Icon/pao.png",
+            "BundleName": "game_pao.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/PathData/Game.asset",
+            "BundleName": "game_game.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Shader/SoftFresnelToon.shader",
+            "BundleName": "game_softfresneltoon.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Shader/WX_MobileOptimized.shader",
+            "BundleName": "game_wx_mobileoptimized.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Prefab/Bullet.prefab",
+            "BundleName": "game_bullet.ab",
+            "Dependencies": [
+                "Packages/com.unity.2d.sprite/Editor/ObjectMenuCreation/DefaultAssets/Textures/v2/Square.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Prefab/DragonHead.prefab",
+            "BundleName": "game_dragonhead.ab",
+            "Dependencies": [
+                "Assets/Res/Product/Game/Icon/longtou.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Prefab/DragonPart.prefab",
+            "BundleName": "game_dragonpart.ab",
+            "Dependencies": [
+                "Assets/Res/Product/Game/Material/SoftFresnelToon.mat",
+                "Assets/Res/Product/Game/Icon/longzhu_03.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Prefab/DragonTail.prefab",
+            "BundleName": "game_dragontail.ab",
+            "Dependencies": [
+                "Packages/com.unity.2d.sprite/Editor/ObjectMenuCreation/DefaultAssets/Textures/IsometricDiamondWithBorder.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Game/Prefab/Turret.prefab",
+            "BundleName": "game_turret.ab",
+            "Dependencies": [
+                "Packages/com.unity.2d.sprite/Editor/ObjectMenuCreation/DefaultAssets/Textures/v2/Square.png"
+            ]
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Conf/ConfBullet.json",
+            "BundleName": "conf_conf.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Conf/ConfDragon.json",
+            "BundleName": "conf_conf.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Conf/ConfDragonJoint.json",
+            "BundleName": "conf_conf.ab",
+            "Dependencies": []
+        },
+        {
+            "AssetPath": "Assets/Res/Product/Conf/ConfTurret.json",
+            "BundleName": "conf_conf.ab",
+            "Dependencies": []
+        }
+    ]
+}
