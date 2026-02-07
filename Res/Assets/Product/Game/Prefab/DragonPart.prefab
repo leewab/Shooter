@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1403874918761409304}
   - component: {fileID: 8538904523994099652}
-  - component: {fileID: 5065620508639889816}
+  - component: {fileID: 996870248533853538}
   m_Layer: 6
   m_HasEditorInfo: 1
   m_Name: DragonPart
@@ -48,17 +48,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 299bdd4d9e1e41e393ea099fe29be856, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  JointIndex: 0
-  onDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  onHealthChanged:
-    m_PersistentCalls:
-      m_Calls: []
+  BonesIndex: 0
   spriteRenderer: {fileID: 7716682160875812494}
   meshRender: {fileID: 4680291554490264443}
---- !u!65 &5065620508639889816
-BoxCollider:
+  enableRolling: 1
+  rollingSpeed: 1
+  autoCalculateAxis: 1
+  rotationAxis: {x: 0, y: 1, z: 0}
+  rotationOffset: 0
+--- !u!135 &996870248533853538
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -72,11 +71,11 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 1}
+  m_Radius: 4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3995640549774639143
 GameObject:
@@ -107,7 +106,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 8, y: 8, z: 1}
+  m_LocalScale: {x: 8, y: 8, z: 8}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1403874918761409304}
@@ -143,7 +142,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 503c36e9603eabb44aa8fa7a3ae8b809, type: 2}
+  - {fileID: 2100000, guid: 01b58d928209071429d4c02e5a98913d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
