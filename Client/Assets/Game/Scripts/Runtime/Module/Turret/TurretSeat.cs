@@ -5,6 +5,7 @@ namespace Gameplay
     public class TurretSeat : MonoBehaviour
     {
         [SerializeField] private GameObject _turretLock;
+        private TurretEntity _TurretEntity;
 
         public bool IsActive;
         public bool IsOccupy;
@@ -14,6 +15,15 @@ namespace Gameplay
             this.IsActive = isActive;
             this.gameObject.SetActive(true);
             this._turretLock?.SetActive(!isActive);
+        }
+
+        public void ResetSeat()
+        {
+            if (_TurretEntity != null)
+            {
+                _TurretEntity.Recycle();
+                _TurretEntity = null;
+            }
         }
 
         public void SetOccupy(bool isOccupy)
@@ -28,6 +38,7 @@ namespace Gameplay
                     Application.Pause();
                 }
             }
+            
             this.IsOccupy = isOccupy;
         }
 
@@ -46,16 +57,21 @@ namespace Gameplay
             }
             
             SetOccupy(true);
-            turret.SetupTurret(this.transform);
-            turret.OnDeadEvent -= OnTurretDeadEvent;
-            turret.OnDeadEvent += OnTurretDeadEvent;
+
+            _TurretEntity = turret;
+            _TurretEntity.SetupTurret(this.transform);
+            _TurretEntity.OnDeadEvent -= OnTurretDeadEvent;
+            _TurretEntity.OnDeadEvent += OnTurretDeadEvent;
             return true;
         }
 
-        private void OnTurretDeadEvent(int index)
+        private void OnTurretDeadEvent()
         {
+            _TurretEntity = null;
             SetOccupy(false);
         }
+        
+        
         
     }
 }

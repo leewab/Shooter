@@ -24,13 +24,13 @@ namespace Gameplay
             switch (color)
             {
                 case ColorType.Red:
-                    return Color.red;
+                    return new Color(0.9f, 0.2f, 0.2f, 1.0f);
                 case ColorType.Green:
-                    return Color.green;
+                    return new Color(0.2f, 0.8f, 0.2f, 1.0f);
                 case ColorType.Blue:
-                    return Color.blue;
+                    return new Color(0.2f, 0.5f, 0.9f, 1.0f);
                 case ColorType.Yellow:
-                    return Color.yellow;
+                    return new Color(0.9f, 0.8f, 0.2f, 1.0f);
                 case ColorType.Orange:
                     return new Color(0.5f, 0.2f, 0.016f, 1);
                 case ColorType.Purple:
@@ -72,10 +72,9 @@ namespace Gameplay
             return GameObjectPool<BaseTurret>.Instance.GetObject(TurretPrefab, parent, position, rotation);
         }
 
-        public void RecycleTurret(BaseTurret turret)
+        public bool RecycleTurret(BaseTurret turret)
         {
-            if (turret == null) return;
-            GameObjectPool<BaseTurret>.Instance.RecycleObject(TurretPrefab, turret);
+            return GameObjectPool<BaseTurret>.Instance.RecycleObject(TurretPrefab, turret);
         }
     }
 }

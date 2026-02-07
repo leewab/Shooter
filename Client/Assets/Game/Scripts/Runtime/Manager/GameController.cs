@@ -58,17 +58,17 @@ namespace Gameplay
 
         private void RegisterEvents()
         {
-            if (DragonManager.Instance != null)
+            if (DragonController.Instance != null)
             {
-                DragonManager.Instance.OnSuccessEvent += HandleDragonResult;
+                DragonController.Instance.OnSuccessEvent += HandleDragonResult;
             }
         }
 
         private void UnregisterEvents()
         {
-            if (DragonManager.Instance != null)
+            if (DragonController.Instance != null)
             {
-                DragonManager.Instance.OnSuccessEvent -= HandleDragonResult;
+                DragonController.Instance.OnSuccessEvent -= HandleDragonResult;
             }
         }
 
@@ -77,17 +77,17 @@ namespace Gameplay
             CurrentState = GameState.Preparing;
             Score = 0;
             GameTime = 0f;
+            
+            if (dragonController != null)
+            {
+                dragonController.ResetDragon();
+                dragonController.StartMoving();
+            }
 
             if (turretsHandler != null)
             {
                 turretsHandler.ClearTurret();
                 turretsHandler.InitTurret();
-            }
-
-            if (dragonController != null)
-            {
-                dragonController.ResetDragon();
-                dragonController.StartMoving();
             }
             
             Debug.Log("[GameController] Game Prepared");

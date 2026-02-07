@@ -1,37 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Framework.UIFramework;
+using System;
+using System.Text;
+using GameConfig;
 using Gameplay;
 using UnityEngine;
 
-/// <summary>
-/// 炮台实体类（存储核心状态和信息）
-/// </summary>
-public class TurretData
-{
-    // 唯一标识ID
-    public int Index { get; set; }
-    // 配置ID
-    public int Id { get; set; }
-    // 是否存活（未被消除）
-    public bool IsAlive { get; set; } 
-    // 所在列（0/1/2，固定3列）
-    public int Col { get; set; } 
-    // 所在列内的位置索引（前置→后置：0→n-1）
-    public int Row { get; set; } 
-    public TurretInfo TurretInfo { get; set; }
-
-    public TurretData(int index, int id, int col, int row, TurretInfo turretInfo)
-    {
-        Index = index;
-        Id = id;
-        Col = col;
-        Row = row;
-        IsAlive = true; // 初始化默认存活
-        TurretInfo = turretInfo;
-    }
-}
+// /// <summary>
+// /// 炮台实体类（存储核心状态和信息）
+// /// </summary>
+// public struct TurretData
+// {
+//     // 所在列（0/1/2，固定3列）
+//     public int Col { get; set; } 
+//     // 所在行
+//     public int Row { get; set; } 
+//     public TurretInfo TurretInfo { get; set; }
+//
+//     public TurretData(int row, int col, TurretInfo turretInfo)
+//     {
+//         Col = col;
+//         Row = row;
+//         TurretInfo = turretInfo;
+//     }
+//
+//     public void RefreshPos(int row, int col)
+//     {
+//         Col = col;
+//         Row = row;
+//     }
+//
+//     public string ToString()
+//     {
+//         return $"Row:{Row}Col:{Col} Type:{((ColorType)TurretInfo.Type).ToString()} AttackNum:{TurretInfo.AttackNum}";
+//     }
+// }
 
 /// <summary>
 /// 3×n炮台网格管理器（承载核心算法）
@@ -48,12 +49,11 @@ public class TurretHandler : SingletonMono<TurretHandler>
     private int _columnCount = 3; 
     // 竖向行数n（每列最大炮台数量）
     private int _rowCount = 10;
+    // Turret索引
+    private int _Index = 0;
     private LayerMask targetLayer;
     // 核心网格数据：[列索引][列内炮台列表]，保证每列独立管理、补位
-    private TurretData[,] _turretDataList;
-
-    // 炮台移除
-    public event Action<int> OnRefreshTurret;
+    private TurretInfo[,] _turretInfoMatrix;
 
     protected override void Awake()
     {
@@ -83,83 +83,52 @@ public class TurretHandler : SingletonMono<TurretHandler>
             throw new ArgumentException("竖向行数n必须大于0", nameof(_rowCount));
         }
 
-        int index = 0;
-        var dragonArr = DragonManager.Instance.GetDragonBoneType();
-        var difficulty = LevelManager.Instance.GetCurrentDifficulty();
-        var turretMatrixGenerator = new TurretMatrixGenerator();
-        var turretMatrix = turretMatrixGenerator.GenerateTurretMatrix(dragonArr, difficulty);
-        var rowLength = turretMatrix.GetLength(0);
-        var colLength = turretMatrix.GetLength(1);
-        _turretDataList = new TurretData[rowLength,colLength];
-        for (int i = 0; i < rowLength; i++)
-        {
-            for (int j = 0; j < colLength; j++)
-            {
-                var turretInfo = turretMatrix[i, j];
-                TurretData newTurretData = new TurretData(
-                    index: index++,
-                    id:turretInfo.Id,
-                    col: j,
-                    row: i,
-                    turretInfo: turretInfo
-                );
-                _turretDataList[i, j] = newTurretData;
-            }
-        }
-
-        _turretsGrid.InitializeTurrets(_turretDataList);
+        _turretInfoMatrix = TurretMatrixManager.Instance.GenerateTurretMatrix();
+        _turretsGrid.InitializeTurrets(_turretInfoMatrix);
     }
 
+    private static int SetupTurretNum = 0;
+    private static int GenerateTurretNum = 0;
+    
     /// <summary>
     /// 点击消除指定炮台（核心消除算法）
     /// </summary>
     /// <param name="targetTurretData">待消除的目标炮台</param>
     /// <returns>是否消除成功</returns>
-    public bool EliminateTurret(TurretData targetTurretData)
+    public void EliminateTurret(int removeRow, int removeCol)
     {
-        // 1. 基础参数校验
-        if (targetTurretData == null || !targetTurretData.IsAlive)
-        {
-            return false;
-        }
-        
-        int rowLength = _turretDataList.GetLength(0);
-        int colLength = _turretDataList.GetLength(1);
+        SetupTurretNum++;
+        int rowLength = _turretInfoMatrix.GetLength(0);
+        int colLength = _turretInfoMatrix.GetLength(1);
 
-        int colIndex = targetTurretData.Col;
-        int rowIndex = targetTurretData.Row;
-
-        // 2. 校验列的合法性（0~2）
-        if (colIndex < 0 || colIndex >= colLength)
+        if (removeCol < 0 || removeCol >= colLength)
         {
-            return false;
+            Debug.LogError("消除列不合法！ removeCol:" + removeCol);
+            return;
         }
 
-        if (rowIndex != 0)
-        {
-            return false;
-        }
-
-        // 4. 标记炮台为已消除（非销毁数据，为补位保留结构）
-        targetTurretData.IsAlive = false;
-
-        // 5. 触发当前列的自动补位逻辑
-        int index = 0;
         for (int i = 0; i < rowLength; i++)
         {
-            var columnTurrets = _turretDataList[i, colIndex];
-            if (columnTurrets != null && columnTurrets.IsAlive)
+            if (i < rowLength - 1)
             {
-                columnTurrets.Row = index++;
+                // 将下一行的Turret移动到当前行
+                _turretInfoMatrix[i, removeCol] = _turretInfoMatrix[i + 1, removeCol];
+            }
+            else
+            {
+                GenerateTurretNum++;
+                // 生成新的Turret
+                var turretInfo = TurretMatrixManager.Instance.GetTurretInfo();
+                _turretInfoMatrix[i, removeCol] = turretInfo;
             }
         }
-        
-        OnRefreshTurret?.Invoke(colIndex);
-        return true;
+
+        _turretsGrid.RefreshTurrets(removeRow, removeCol, _turretInfoMatrix);
     }
     
     private void OnRaycastClick()
     {
+        if (GameController.Instance.CurrentState != GameState.Playing) return;
         if (Input.GetMouseButtonDown(0)) // 鼠标左键点击
         {
             // 将屏幕点击位置转换为世界坐标
@@ -215,30 +184,10 @@ public class TurretHandler : SingletonMono<TurretHandler>
         InitTurretGrid();
         InitTurretSeat();
     }
-    
-    /// <summary>
-    /// 清空整个3×n网格的炮台（重置状态）
-    /// </summary>
-    public void ClearAllGrid()
-    {
-        if (_turretDataList == null) return;
-        var rowLength = _turretDataList.GetLength(0);
-        var colLength = _turretDataList.GetLength(1);
-        for (int i = 0; i < rowLength; i++)
-        {
-            for (int j = 0; j < colLength; j++)
-            {
-                _turretDataList[i, j].IsAlive = false;
-            }
-        }
-    }
 
     public void ClearTurret()
     {
-        if (_turretDataList != null)
-        {
-            _turretDataList = null;
-        }
+        _turretInfoMatrix = null;
 
         if (_turretsGrid != null)
         {
@@ -249,7 +198,7 @@ public class TurretHandler : SingletonMono<TurretHandler>
         {
             foreach (var turretSeat in _turretSeatList)
             {
-                turretSeat.SetOccupy(false);
+                turretSeat.ResetSeat();
             }
         }
     }

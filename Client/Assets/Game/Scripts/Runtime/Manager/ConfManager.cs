@@ -44,13 +44,13 @@ namespace GameConfig
                 }
                 else
                 {
-                    Debug.LogError($"配置表{confName}中未发现ID:{id} 的值！");
+                    Debug.LogError($"配置表{confName}中未发现Id为 {id} 的值！");
                     return null;
                 }
             }
             
             var confContent = LoadConf(confName);
-            if (confContent == null)
+            if (confContent == null || string.IsNullOrEmpty(confContent.text))
             {
                 Debug.LogError($"{confName} 配置表加载为空");
                 return null;
@@ -62,7 +62,13 @@ namespace GameConfig
                 var configList = JsonConvert.DeserializeObject<List<T>>(confContent.text);
                 var configDic = configList.ToDictionary(item => item.Id, item => item as BaseConf);
                 _confMaps.Add(confName, configDic);
-                return configDic[id] as T;
+                if (configDic.TryGetValue(id, out var conf))
+                {
+                    return conf as T;
+                }
+                
+                Debug.LogError($"配置表{confName}中未发现Id为 {id} 的值！");
+                return null;
             }
             catch (Exception e)
             {

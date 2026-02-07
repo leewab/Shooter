@@ -2,26 +2,29 @@
 using UnityEngine;
 using DG.Tweening;
 using GameConfig;
+using UnityEditor;
 using UnityEngine.UI;
 
 namespace Gameplay
 {
     public class TurretEntity : BaseTurret
     {
-        private TurretData _turretData;
         private ConfTurret _confTurret;
         
         [SerializeField] private Text txtBullet;
         [SerializeField] private Transform firePoint;
         [SerializeField] private SpriteRenderer spriteRenderer;
         
-        public Action<int> OnDeadEvent;
+        public Action OnDeadEvent;
         public Action<int> OnUpdateHitNum;
 
-        private int _delayActive = 30;
-        private int _currentHitNum = 0;
+        private string _bulletName;
+        private TurretPos _turretPos;
+        private TurretInfo _turretInfo;
+        private int _currentHitNum = 1;
         private float _attackTimer = 0f;
         private Tween recoilPositionTween; 
+        private Tween recoilRotationTween; 
         
         public bool IsActive;
         public bool IsFirst;
@@ -29,11 +32,6 @@ namespace Gameplay
         private void Update()
         {
             if (!IsActive) return;
-            if (_delayActive > 0)
-            {
-                _delayActive--;
-                return;
-            }
 
             if (_attackTimer > 0)
             {
@@ -44,9 +42,21 @@ namespace Gameplay
             PerformAttack();
         }
 
+        private void InitEntity()
+        {
+            IsFirst = _turretPos.RowIndex == 0;
+            _confTurret = ConfTurret.GetConf<ConfTurret>(_turretInfo.Id);
+            _currentHitNum = _turretInfo.AttackNum;
+            var confBullet = ConfBullet.GetConf<ConfBullet>(_confTurret.BulletId);
+            _bulletName = confBullet.BulletName;
+            txtBullet.text = _currentHitNum.ToString();
+            OnUpdateHitNum?.Invoke(_currentHitNum);
+            InitializeComponents();
+        }
+
         private void InitializeComponents()
         {
-            if (spriteRenderer != null)
+            if (spriteRenderer != null && _confTurret != null)
             {
                 spriteRenderer.sprite = TurretManager.Instance.GetTurretSprite(_confTurret.Icon);
             }
@@ -58,7 +68,7 @@ namespace Gameplay
 
         private void PerformAttack()
         {
-            DragonJoint targetJoint = DragonManager.Instance.FindNearestUnblockedMatchingJoint(_confTurret.ColorType, firePoint.position);
+            DragonJoint targetJoint = DragonController.Instance.FindNearestUnblockedMatchingJoint(_confTurret.ColorType, firePoint.position);
             if (targetJoint != null)
             {
                 AttackJoint(targetJoint);
@@ -75,7 +85,7 @@ namespace Gameplay
             PlayRecoilAnimation(direction);
             PlayMuzzleFlash();
 
-            var bullet = BulletManager.Instance.InstantiateBullet(_confTurret.BulletName, firePoint.position, Quaternion.identity) as BulletEntity;
+            var bullet = BulletManager.Instance.InstantiateBullet(_bulletName, firePoint.position, Quaternion.identity) as BulletEntity;
             bullet?.Init(_confTurret.Id, _confTurret.ColorType, direction, joint.transform.position);
             bullet?.AddRegister(OnBulletHitCallback);
             
@@ -93,16 +103,21 @@ namespace Gameplay
             Vector3 originalPosition = transform.position;
 
             // 计算后坐力位置（沿子弹发射反方向）
-            Vector3 recoilPosition = originalPosition - (Vector3)fireDirection * _confTurret.RecoilDistance;
+            Vector3 recoilPosition = originalPosition - Vector3.up * _confTurret.RecoilDistance; //originalPosition - (Vector3)fireDirection * _confTurret.RecoilDistance;
 
             // 立即应用后坐力（瞬间）
             transform.position = recoilPosition;
+            // transform.LookAt(originalPosition);
 
             // 使用 DOTween 平滑复位
             recoilPositionTween = transform
                 .DOMove(originalPosition, _confTurret.RecoilDuration)
                 .SetEase(Ease.OutQuad)
                 .SetAutoKill(true);
+
+            // recoilRotationTween = transform.DORotate(Vector3.zero, _confTurret.RecoilDuration)
+            //     .SetEase(Ease.Linear)
+            //     .SetAutoKill(true);
         }
 
         private void PlayMuzzleFlash()
@@ -126,44 +141,47 @@ namespace Gameplay
 
         private void Clear()
         {
+            IsFirst = false;
+            IsActive = false;
             OnDeadEvent = null;
             OnUpdateHitNum = null;
-            recoilPositionTween?.Kill();
-            _turretData = null;
             _confTurret = null;
-        }
-
-        private void RecycleTurret()
-        {
-            IsActive = false;
-            TurretManager.Instance.RecycleTurret(this);
-            OnDeadEvent?.Invoke(_turretData.Index);
-            Clear();
+            if (recoilPositionTween != null)
+            {
+                recoilPositionTween?.Kill();
+                recoilPositionTween = null;
+            }
+            // if (recoilRotationTween != null)
+            // {
+            //     recoilRotationTween?.Kill();
+            //     recoilRotationTween = null;
+            // }
         }
 
         private void OnBulletHitCallback()
         {
-            if (_currentHitNum <= 0)
+            if (_currentHitNum <= 0 && IsActive)
             {
                 IsActive = false;
                 float deadDuration = 0.1f;
                 PlayDeadAnimation(deadDuration);
-                Invoke(nameof(RecycleTurret), deadDuration);
+                Invoke(nameof(Recycle), deadDuration);
             }
         }
-        
         
         /// <summary>
         /// 架设炮台
         /// </summary>
         public override void SetupTurret(Transform parent)
         {
+            this.gameObject.name = $"TurretAttack_{_confTurret.Id}";
             this.transform.SetParent(parent);
             this.transform.DOKill();
-            this.transform.DOLocalMove(Vector3.zero, 0.1f).SetEase(Ease.Linear);
-            this._delayActive = 120;
-            this.IsActive = true;
-            TurretHandler.Instance.EliminateTurret(_turretData);
+            this.transform.DOLocalMove(Vector3.zero, 0.1f).SetEase(Ease.Linear).OnComplete(() =>
+            {
+                this.IsActive = true;
+                TurretHandler.Instance.EliminateTurret(_turretPos.RowIndex, _turretPos.ColIndex);
+            });
         }
 
         /// <summary>
@@ -172,15 +190,17 @@ namespace Gameplay
         /// <param name="parameters"></param>
         public override void Init(params object[] parameters)
         {
-            TurretData td = (TurretData)parameters[0];
-            if (td == null) return;
-            _turretData = td;
-            IsFirst = td.Row == 0;
-            _confTurret = ConfTurret.GetConf<ConfTurret>(td.Id);
-            _currentHitNum = _turretData.TurretInfo.CurrentHitNum;
-            txtBullet.text = _currentHitNum.ToString();
-            OnUpdateHitNum?.Invoke(_currentHitNum);
-            InitializeComponents();
+            _turretInfo = (TurretInfo)parameters[0];
+            _turretPos = (TurretPos)parameters[1];
+            if (parameters.Length == 3)
+            {
+                var delay = (float)(parameters[2]);
+                Invoke(nameof(InitEntity), delay);
+            }
+            else
+            {
+                InitEntity();
+            }
         }
 
         /// <summary>
@@ -188,7 +208,16 @@ namespace Gameplay
         /// </summary>
         public override void Recycle()
         {
-            RecycleTurret();
+            if (TurretManager.Instance.RecycleTurret(this))
+            {
+                IsActive = false;
+                OnDeadEvent?.Invoke();
+                Clear();
+            }
+            else
+            {
+                Debug.LogError("Turret 回收失败！");
+            }
         }
 
         /// <summary>

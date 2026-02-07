@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Text;
 using UnityEngine;
 using DG.Tweening;
+using GameConfig;
+using UnityEditor;
 
 namespace Gameplay
 {
@@ -9,108 +10,132 @@ namespace Gameplay
     {
         private Vector2 _StartPostion;
         private Vector2 _Space = new Vector2(20, 20);
-        private TurretData[,] _TurretDataList;
-        private Dictionary<int, TurretEntity> _TurretEntitiesMap;
+        private TurretEntity[,] _TurretEntitiesMap;
 
-        private void OnEnable()
+        public void InitializeTurrets(TurretInfo[,] turretGrid)
         {
-            TurretHandler.Instance.OnRefreshTurret -= OnRefreshTurret;
-            TurretHandler.Instance.OnRefreshTurret += OnRefreshTurret;
+            if (turretGrid == null) return;
+            _StartPostion = transform.position;
+            int rowLength = turretGrid.GetLength(0);
+            int colLength = turretGrid.GetLength(1);
+            _TurretEntitiesMap = new TurretEntity[rowLength, colLength];
+            for (int i = 0; i < rowLength; i++)
+            {
+                for (int j = 0; j < colLength; j++)
+                {
+                    var turretData = turretGrid[i, j];
+                    _TurretEntitiesMap[i, j] = GenerateTurretEntity(turretData, new TurretPos(i, j));
+                }
+            }
         }
 
-        public void InitializeTurrets(TurretData[,] turretGrid)
+        private static int GenerateEntityNum = 0;
+        public void RefreshTurrets(int removeRow, int removeCol, TurretInfo[,] turretGrid)
         {
-            _TurretDataList = turretGrid;
+            if (turretGrid == null) return;
             _StartPostion = transform.position;
-            InitTurretGrid();
+            if (_TurretEntitiesMap == null) return;
+
+            int rowLength = turretGrid.GetLength(0);
+            int colLength = turretGrid.GetLength(1);
+            if (removeCol >= colLength) return;
+
+            // 创建临时数组
+            var turretEntitiesMap = new TurretEntity[rowLength, colLength];
+
+            // 复制所有元素
+            for (int i = 0; i < rowLength; i++)
+            {
+                for (int j = 0; j < colLength; j++)
+                {
+                    turretEntitiesMap[i, j] = _TurretEntitiesMap[i, j];
+                }
+            }
+            turretEntitiesMap[removeRow, removeCol] = null;
+
+            // 处理当前列
+            var posX = _StartPostion.x + removeCol * _Space.x;
+            for (int i = removeRow; i < rowLength; i++)
+            {
+                var turretData = turretGrid[i, removeCol];
+                if (i < rowLength - 1 && turretEntitiesMap[i + 1, removeCol] != null)
+                {
+                    // 使用同一列下一行的TurretEntity
+                    Vector3 targetPos = new Vector3(posX, _StartPostion.y - (i * _Space.y), 0);
+                    var turretEntity = turretEntitiesMap[i + 1, removeCol];
+                    // Debug.LogError($"当前位置{i},{removeCol},补充name:{turretEntity.gameObject.name}");
+                    turretEntity.transform.DOKill();
+                    turretEntity.transform.DOMove(targetPos, 0.2f).SetEase(Ease.OutBack);
+                    turretEntity.gameObject.name = $"Turret_{i}_{removeCol}|{(ColorType)turretData.Type}";
+                    turretEntity.Init(turretData, new TurretPos(i, removeCol), 0.3f);
+                    turretEntitiesMap[i, removeCol] = turretEntity;
+                    turretEntitiesMap[i + 1, removeCol] = null; // 清空原位置
+                }
+                else
+                {
+                    GenerateEntityNum++;
+                    // 生成新的TurretEntity
+                    var turretEntity = GenerateTurretEntity(turretData, new TurretPos(i, removeCol));
+                    if (turretEntity != null)
+                    {
+                        // Debug.LogError($"当前位置为空{i},{removeCol},补充name:{turretEntity.gameObject.name}");
+                        turretEntitiesMap[i, removeCol] = turretEntity;
+                    }
+                    else
+                    {
+                        Debug.LogError("未生成炮台");
+                    }
+                }
+            }
+
+            // 复制回原数组
+            for (int i = 0; i < rowLength; i++)
+            {
+                for (int j = 0; j < colLength; j++)
+                {
+                    _TurretEntitiesMap[i, j] = turretEntitiesMap[i, j];
+                }
+            }
         }
 
         public void ClearTurrets()
         {
             if (_TurretEntitiesMap != null)
             {
-                var entities = _TurretEntitiesMap.Values.ToArray();
-                foreach (var turretEntity in entities)
+                int rowLength = _TurretEntitiesMap.GetLength(0);
+                int colLength = _TurretEntitiesMap.GetLength(1);
+                for (int i = 0; i < rowLength; i++)
                 {
-                    turretEntity?.Recycle();
+                    for (int j = 0; j < colLength; j++)
+                    {
+                        _TurretEntitiesMap[i, j].Recycle();
+                    }
                 }
                 
-                _TurretEntitiesMap.Clear();
+                _TurretEntitiesMap = null;
             }
-
-            _TurretDataList = null;
         }
 
-        private void InitTurretGrid()
+        private TurretEntity GenerateTurretEntity(TurretInfo turretInfo, TurretPos turretPos)
         {
-            if  (_TurretEntitiesMap != null) _TurretEntitiesMap.Clear();
-            int rowLength = _TurretDataList.GetLength(0);
-            int colLength = _TurretDataList.GetLength(1);
-            for (int i = 0; i < rowLength; i++)
+            Vector2 pos = _StartPostion + new Vector2(turretPos.ColIndex * _Space.x, - turretPos.RowIndex * _Space.y);
+            Vector3 turretPosition = new Vector3(pos.x, pos.y, 0);
+            var turret = GenerateTurret(turretPosition) as TurretEntity;
+            if (turret != null)
             {
-                for (int j = 0; j < colLength; j++)
-                {
-                    var turretData = _TurretDataList[i, j];
-                    if (turretData == null)
-                    {
-                        Debug.LogError("turrets wei null");
-                        continue;
-                    }
-                    if (_TurretEntitiesMap == null)
-                    {
-                        int totalNum = rowLength * colLength;
-                        _TurretEntitiesMap = new Dictionary<int, TurretEntity>(totalNum);
-                    }
-                    var turret = GenerateTurret(turretData) as TurretEntity;
-                    if (turret != null)
-                    {
-                        turret.Init(turretData);
-                        turret.OnDeadEvent -= OnDeadEvent;
-                        turret.OnDeadEvent += OnDeadEvent;
-                        _TurretEntitiesMap.Add(turretData.Index, turret);
-                    }
-                }
+                turret.Init(turretInfo, turretPos);
             }
-        }
-
-        private BaseTurret GenerateTurret(TurretData turretData)
-        {
-            Vector2 pos = _StartPostion + new Vector2(turretData.Col * _Space.x, - turretData.Row * _Space.y);
-            return TurretManager.Instance.InstantiateTurret(transform, new Vector3(pos.x, pos.y, 0), Quaternion.identity);
-        }
-
-        private void OnRefreshTurret(int column)
-        {
-            if (_TurretEntitiesMap == null) return;
-            if (_TurretDataList == null) return;
-            int rowLength = _TurretDataList.GetLength(0);
-            int colLength = _TurretDataList.GetLength(1);
-            if (column >= colLength) return;
-            for (int i = 0; i < rowLength; i++)
+            else
             {
-                var turretData = _TurretDataList[i, column];
-                if (!turretData.IsAlive) continue;
-                if (_TurretEntitiesMap.TryGetValue(turretData.Index, out TurretEntity turret))
-                {
-                    turret.Init(turretData);
-                    Vector3 targetPos = new Vector3(
-                        _StartPostion.x + turretData.Col * _Space.x,
-                        _StartPostion.y - turretData.Row * _Space.y,
-                        0
-                    );
-                    turret.transform.DOKill();
-                    turret.transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutBack);
-                }
+                Debug.LogError("Turret 生成为空！");
             }
+            
+            return turret;
         }
 
-        private void OnDeadEvent(int index)
+        private BaseTurret GenerateTurret(Vector3 turretPosition)
         {
-            if (_TurretEntitiesMap.TryGetValue(index, out TurretEntity turret))
-            {
-                _TurretEntitiesMap.Remove(index);
-            }
+            return TurretManager.Instance.InstantiateTurret(transform, turretPosition, Quaternion.identity);
         }
-
     }
 }

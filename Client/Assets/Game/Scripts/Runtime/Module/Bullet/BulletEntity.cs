@@ -155,7 +155,7 @@ namespace Gameplay
             // 2. 播放命中音效
             if (!string.IsNullOrEmpty(_confBulletConfig.HitSoundName))
             {
-                AudioManager.Instance.PlaySound(_confBulletConfig.HitSoundName, transform.position);
+                AudioManager.Instance.PlaySound(_confBulletConfig.HitSoundName);
             }
 
             // 3. 屏幕震动
@@ -188,7 +188,7 @@ namespace Gameplay
 
             if (!string.IsNullOrEmpty(_confBulletConfig.MissSoundName))
             {
-                AudioManager.Instance.PlaySound(_confBulletConfig.MissSoundName, transform.position);
+                AudioManager.Instance.PlaySound(_confBulletConfig.MissSoundName);
             }
         }
 

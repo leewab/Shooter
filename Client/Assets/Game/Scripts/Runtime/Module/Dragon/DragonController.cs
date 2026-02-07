@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Framework.UIFramework;
 using GameConfig;
 using Gameplay;
@@ -6,20 +7,23 @@ using GameUI;
 using ResKit;
 using UnityEngine;
 
-public class DragonController : MonoBehaviour
+public class DragonController : SingletonMono<DragonController>
 {
+    public Action<bool> OnSuccessEvent;
+        
     private PathPointData _PathData;
     private GameObject jointHead;
     private GameObject jointTail;
     private GameObject jointBody;
     
     // 所有关节
-    private List<DragonJoint> allDragonJoints;
-    // 记录被摧毁的关节索引
-    private List<int> destroyedJoints;  
+    private List<DragonJoint> _DragonBones;
     // 所有节点距离
-    private List<float> jointDistances;
-    
+    private List<float> _BonesDistances;
+    // 所有的龙骨信息
+    private List<DragonBoneInfo> _DragonBonesInfos;
+    public List<DragonBoneInfo> DragonBonesInfos => _DragonBonesInfos;
+
     // 私有变量
     private ConfDragon _ConfDragon;
     private float tailDistance = 0f;
@@ -29,7 +33,7 @@ public class DragonController : MonoBehaviour
     private float _SpeedChangeTimer;
     private int _CurLevelID;
 
-    void Start()
+    private void Start()
     {
         if (_PathData == null) _PathData = ResourceManager.Instance.Load<PathPointData>(PathDefine.PathDataPath);
         if (jointHead == null) jointHead = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonHeadPath);
@@ -40,10 +44,15 @@ public class DragonController : MonoBehaviour
     private void Update()
     {
         if (!isMoving || _PathData == null || !_PathData.HasData()) return;
-
         UpdateSpeed();
         UpdateHeadPosition();
         UpdateJointsPosition();
+    }
+    
+    private void OnDestroy()
+    {
+        _PathData = null;
+        ClearDragon();
     }
 
     private void UpdateSpeed()
@@ -60,12 +69,6 @@ public class DragonController : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        _PathData = null;
-        ClearJoints();
-    }
-
     // 初始化龙
     private void InitializeDragon()
     {
@@ -74,89 +77,92 @@ public class DragonController : MonoBehaviour
         _ConfDragon = ConfDragon.GetConf<ConfDragon>(_CurLevelID);
         _CurSpeed = _ConfDragon.MaxMoveSpeed;
         _SpeedChangeTimer = 0f;
-        ClearJoints();
-        CreateJoints();
+        InitDragonBones();
+        ClearBones();
+        CreateBones();
         InitializeJointDistances();
     }
-    
-    // 创建关节
-    private void CreateJoints()
+
+    // 初始化龙骨信息
+    private void InitDragonBones()
     {
         if (_ConfDragon == null) return;
         int[] dragonJoints = _ConfDragon.DragonJoints;
-        int[] dragonJointColors = _ConfDragon.DragonJointColors;
-        if (dragonJoints == null || dragonJointColors == null) return;
         int dragonJointNum = dragonJoints.Length;
-        if (dragonJointNum != dragonJointColors.Length)
+        _DragonBonesInfos = new List<DragonBoneInfo>(dragonJointNum);
+        for (int i = 0; i < dragonJoints.Length; i++)
         {
-            Debug.LogError("龙关节数量和颜色数量不匹配");
-            return;
+            var id = dragonJoints[i];
+            var confJoint = ConfDragonJoint.GetConf<ConfDragonJoint>(id);
+            _DragonBonesInfos.Add(new DragonBoneInfo(confJoint.Type, confJoint.Health));
         }
+    }
+    
+    // 创建关节
+    private void CreateBones()
+    {
+        int totalJoints = _DragonBonesInfos.Count + 2;
 
-        int totalJoints = dragonJointNum + 2;
-
-        if (destroyedJoints == null) destroyedJoints = new List<int>(totalJoints);
-        destroyedJoints.Clear();
-
-        if (jointDistances == null) jointDistances = new List<float>(totalJoints);
-        jointDistances.Clear();
+        if (_BonesDistances == null) _BonesDistances = new List<float>(totalJoints);
+        _BonesDistances.Clear();
+        
+        if (_DragonBones == null) _DragonBones = new List<DragonJoint>(totalJoints);
+        _DragonBones.Clear();
+        
         for (int i = 0; i < totalJoints; i++)
         {
-            jointDistances.Add(0f);
+            _BonesDistances.Add(0f);
         }
         
         int index = 0;
-        if (allDragonJoints == null) allDragonJoints = new List<DragonJoint>(totalJoints);
-        allDragonJoints.Clear();
-        allDragonJoints.Add(CreateJoint(jointTail, DragonJointType.Tail, ColorType.None, null, index++));
-        allDragonJoints.AddRange(CreateBody(dragonJointNum, dragonJointColors, dragonJoints, ref index));
-        allDragonJoints.Add(CreateJoint(jointHead, DragonJointType.Head, ColorType.None, null, index++));
-        DragonManager.Instance.AttackDragonJoints = allDragonJoints;
+        _DragonBones.Add(GenerateBones(jointTail, DragonJointType.Tail, ColorType.None, 0, index++));
+        _DragonBones.AddRange(CreateBody(ref index));
+        _DragonBones.Add(GenerateBones(jointHead, DragonJointType.Head, ColorType.None, 0, index++));
     }
 
-    private DragonJoint CreateJoint(GameObject prefab, DragonJointType type, ColorType colorType, ConfDragonJoint conf, int index)
+    private List<DragonJoint> CreateBody(ref int index)
+    {
+        int dragonBoneNum = _DragonBonesInfos.Count;
+        List<DragonJoint> bodyJoints = new List<DragonJoint>(dragonBoneNum);
+        for (int i = 0; i < dragonBoneNum; i++)
+        {
+            var dragonBone = _DragonBonesInfos[i];
+            ColorType colorType = (ColorType)dragonBone.Type;
+            bodyJoints.Add(GenerateBones(jointBody, DragonJointType.Body, colorType, dragonBone.Health, index++));
+        }
+
+        return bodyJoints;
+    }
+    
+    private DragonJoint GenerateBones(GameObject prefab, DragonJointType type, ColorType colorType, int health, int index)
     {
         GameObject jointObj = prefab != null ? Instantiate(prefab, transform) : new GameObject($"DragonJoint_{type}_{index}");
         DragonJoint joint = jointObj.GetComponent<DragonJoint>() ?? jointObj.AddComponent<DragonJoint>();
 
         if (type == DragonJointType.Body)
         {
-            joint.onDestroyed.RemoveListener(OnJointDestroyed);
-            joint.onDestroyed.AddListener(OnJointDestroyed);
+            joint.OnDestroyed -= OnJointDestroyed;
+            joint.OnDestroyed += OnJointDestroyed;
         }
         
-        jointObj.SetActive(false);
         joint.SetData(new DragonJointData()
         {
             JointType = type,
             ColorType = colorType,
-            ConfDragonJoint = conf,
+            JointHealth = health,
             JointIndex = index,
+            JointId = (int)type + 1
         });
 
         return joint;
     }
-
-    private List<DragonJoint> CreateBody(int jointNum, int[] colorTypes, int[] jointIds, ref int index)
-    {
-        List<DragonJoint> bodyJoints = new List<DragonJoint>(jointNum);
-
-        for (int i = 0; i < jointNum; i++)
-        {
-            ColorType colorType = (ColorType)colorTypes[i];
-            ConfDragonJoint conf = ConfDragonJoint.GetConf<ConfDragonJoint>(jointIds[i]);
-            bodyJoints.Add(CreateJoint(jointBody, DragonJointType.Body, colorType, conf, index++));
-        }
-
-        return bodyJoints;
-    }
     
     // 清理关节
-    private void ClearJoints()
+    private void ClearBones()
     {
-        if (allDragonJoints != null)
+        if (_DragonBones != null)
         {
-            foreach (var joint in allDragonJoints)
+            foreach (var joint in _DragonBones)
             {
                 if (joint != null && joint.gameObject != null)
                 {
@@ -166,38 +172,33 @@ public class DragonController : MonoBehaviour
                         DestroyImmediate(joint.gameObject);
                 }
             }
-            allDragonJoints.Clear();
+            _DragonBones.Clear();
         }
 
-        if (jointDistances != null)
+        if (_BonesDistances != null)
         {
-            jointDistances.Clear();
-            jointDistances = null;
-        }
-
-        if (destroyedJoints != null)
-        {
-            destroyedJoints.Clear();
-            destroyedJoints = null;
+            _BonesDistances.Clear();
+            _BonesDistances = null;
         }
     }
     
     // 初始化关节距离
     private void InitializeJointDistances()
     {
-        tailDistance = -allDragonJoints.Count * _ConfDragon.DragonJointSpacing;
+        tailDistance = -_DragonBones.Count * _ConfDragon.DragonJointSpacing;
+        
         // 初始化所有关节的距离
-        for (int i = 0; i < allDragonJoints.Count; i++)
+        for (int i = 0; i < _BonesDistances.Count; i++)
         {
-            jointDistances[i] = Mathf.Max(0, tailDistance + i * _ConfDragon.DragonJointSpacing);
+            _BonesDistances[i] = Mathf.Max(0, tailDistance + i * _ConfDragon.DragonJointSpacing);
         }
 
         // 设置初始位置到远处
-        for (int i = 0; i < allDragonJoints.Count; i++)
+        for (int i = 0; i < _DragonBones.Count; i++)
         {
-            var result = _PathData.GetPositionRotationScaleAtDistance(jointDistances[i]);
-            allDragonJoints[i].transform.position = result.position;
-            allDragonJoints[i].transform.rotation = result.rotation;
+            var result = _PathData.GetPositionRotationScaleAtDistance(_BonesDistances[i]);
+            _DragonBones[i].transform.position = result.position;
+            _DragonBones[i].transform.rotation = result.rotation;
         }
     }
     
@@ -211,11 +212,11 @@ public class DragonController : MonoBehaviour
     // 更新关节位置
     private void UpdateJointsPosition()
     {
-        if (allDragonJoints == null) return;
+        if (_DragonBones == null) return;
         
-        for (int i = 0; i < allDragonJoints.Count; i++)
+        for (int i = 0; i < _DragonBones.Count; i++)
         {
-            DragonJoint joint = allDragonJoints[i];
+            DragonJoint joint = _DragonBones[i];
             if (joint == null) continue;
             if (!joint.gameObject.activeSelf)
             {
@@ -226,10 +227,10 @@ public class DragonController : MonoBehaviour
             float targetDistance = tailDistance + i * _ConfDragon.DragonJointSpacing;
             
             targetDistance = Mathf.Max(0, targetDistance);
-            jointDistances[i] = Mathf.Lerp(jointDistances[i], targetDistance, _ConfDragon.PositionSmoothness * Time.deltaTime);
+            _BonesDistances[i] = Mathf.Lerp(_BonesDistances[i], targetDistance, _ConfDragon.PositionSmoothness * Time.deltaTime);
             
             // 获取路径位置
-            var result = _PathData.GetPositionRotationScaleAtDistance(jointDistances[i]);
+            var result = _PathData.GetPositionRotationScaleAtDistance(_BonesDistances[i]);
             
             // 到终点游戏结束
             if (joint.IsHead() && targetDistance >= _PathData.totalLength - 0.1f)
@@ -240,22 +241,25 @@ public class DragonController : MonoBehaviour
             
             // 更新位置
             joint.transform.position = Vector3.Lerp(joint.transform.position, result.position, _ConfDragon.PositionSmoothness * Time.deltaTime);
-            joint.transform.rotation = result.rotation;
+            if (joint.IsHead() || joint.IsTail())
+            {
+                joint.transform.rotation = result.rotation;
+            }
         }
         
-        if (allDragonJoints.Count <= 2)
+        if (_DragonBones.Count <= 2)
         {
             OnGameSuccess();
         }
     }
     
     // 关节被摧毁时的回调
-    private void OnJointDestroyed(int jointIndex)
+    private void OnJointDestroyed(int bonesIndex)
     {
         int removeIndex = -1;
-        for (int i = 0; i < allDragonJoints.Count; i++)
+        for (int i = 0; i < _DragonBones.Count; i++)
         {
-            if (allDragonJoints[i].JointIndex == jointIndex)
+            if (_DragonBones[i].BonesIndex == bonesIndex)
             {
                 removeIndex = i;
                 break;
@@ -264,8 +268,8 @@ public class DragonController : MonoBehaviour
 
         if (removeIndex >= 0)
         {
-            allDragonJoints.RemoveAt(removeIndex);
-            jointDistances.RemoveAt(removeIndex);
+            _DragonBones.RemoveAt(removeIndex);
+            _BonesDistances.RemoveAt(removeIndex);
         }
 
         UpdateJointsPosition();
@@ -274,17 +278,19 @@ public class DragonController : MonoBehaviour
     private void OnGameOver()
     {
         Debug.Log("GameOver");
-        DragonManager.Instance.OnSuccessEvent?.Invoke(false);
+        OnSuccessEvent?.Invoke(false);
         UIManager.Open<UIGameFailedPanel>();
         StopMoving();
+        ClearDragon();
     }
 
     private void OnGameSuccess()
     {
         Debug.Log("OnGameSuccess");
-        DragonManager.Instance.OnSuccessEvent?.Invoke(true);
+        OnSuccessEvent?.Invoke(true);
         UIManager.Open<UIGameSuccessPanel>();
         StopMoving();
+        ClearDragon();
     }
 
 
@@ -300,10 +306,79 @@ public class DragonController : MonoBehaviour
         StopMoving();
         InitializeDragon();
     }
+
+    public void ClearDragon()
+    {
+        ClearBones();
+        if (_DragonBonesInfos != null)
+        {
+            _DragonBonesInfos.Clear();
+        }
+    }
     
     public void StartMoving() => isMoving = true;
     public void StopMoving() => isMoving = false;
     public void SetSpeed(float speed) => _CurSpeed = speed;
+
+    #endregion
+
+    #region 公共数据
+
+    /// <summary>
+    /// 查询最近的龙骨节点（不考虑遮挡）
+    /// </summary>
+    /// <returns></returns>
+    public List<(float, DragonJoint)> FindNearestMatchingJoint(ColorType colorType, Vector3 firePoint)
+    {
+        if (_DragonBones == null) return null;
+        float minDistance = float.MaxValue;
+        var allJoints = _DragonBones;
+        List<(float, DragonJoint)> nearestJoints = new List<(float, DragonJoint)>(allJoints.Count / 3);
+        foreach (var joint in allJoints)
+        {
+            if (!joint.IsAlive() || joint.GetColorType() != colorType) continue;
+            if (joint.IsHead() || joint.IsTail()) continue;
+
+            float distance = Vector2.Distance(firePoint, joint.transform.position);
+            nearestJoints.Add((distance, joint));
+        }
+
+        return nearestJoints;
+    }
+
+    /// <summary>
+    /// 查询最近的且未被遮挡的龙骨节点（性能优化版本）
+    /// </summary>
+    /// <param name="colorType">炮台颜色类型</param>
+    /// <param name="firePoint">发射点位置</param>
+    /// <returns>最近的未被遮挡的龙骨节点，如果被遮挡则返回null</returns>
+    public DragonJoint FindNearestUnblockedMatchingJoint(ColorType colorType, Vector3 firePoint)
+    {
+        // 步骤1：找到最近的目标（无射线检测）
+        List<(float, DragonJoint)> nearestJoints = FindNearestMatchingJoint(colorType, firePoint);
+        if (nearestJoints == null || nearestJoints.Count <= 0) return null;
+        nearestJoints.Sort((item1, item2) => item1.Item1 < item2.Item1 ? -1 : 1);
+
+        foreach (var nearestJointKV in nearestJoints)
+        {
+            var distance = nearestJointKV.Item1;
+            var nearestJoint = nearestJointKV.Item2;
+            Vector2 direction = (nearestJoint.transform.position - firePoint).normalized;
+
+            bool isHit = Physics.Raycast(firePoint, direction, out var hit, distance, LayerMask.GetMask("Game"));
+            if (isHit && hit.collider != null)
+            {
+                DragonJoint hitJoint = hit.collider.GetComponent<DragonJoint>();
+                // 首个碰撞就是该目标 → 未被遮挡
+                if (hitJoint == nearestJoint)
+                {
+                    return nearestJoint;
+                }
+            }
+        }
+
+        return null;
+    }
 
     #endregion
  

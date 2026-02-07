@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using DG.Tweening;
 using Gameplay;
 using UnityEngine;
 
@@ -14,6 +15,9 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     
     // 对象池根节点（用于整理Hierarchy面板，避免对象混乱）
     private Transform _poolRoot;
+    
+    // 对象池大小限制
+    private int _maxPoolSize = 100;
 
     /// <summary>
     /// 初始化对象池根节点
@@ -58,33 +62,41 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
         T targetObj = null;
 
         // 3. 队列中有空闲对象，直接复用
-        if (objectQueue.Count > 0)
+        lock (objectQueue)
         {
-            targetObj = objectQueue.Dequeue();
-            if (targetObj != null)
+            if (objectQueue.Count > 0)
             {
-                // Debug.Log("对象池去除 " + prefab.name + _poolDict[prefab].Count);
-                var objTransform = targetObj.transform;
-                objTransform.SetParent(parent);
-                objTransform.position = position;
-                objTransform.rotation = rotation;
-                targetObj.gameObject.SetActive(true);
+                targetObj = objectQueue.Dequeue();
+                if (targetObj != null)
+                {
+                    var objTransform = targetObj.transform;
+                    objTransform.SetParent(parent);
+                    objTransform.position = position;
+                    objTransform.rotation = rotation;
+                    objTransform.SetAsLastSibling();
+                    targetObj.gameObject.SetActive(true);
+                }
             }
-        }
-        // 4. 队列中无空闲对象，创建新对象
-        else
-        {
-            GameObject newObj = Object.Instantiate(prefab, position, rotation, parent);
-            targetObj = newObj.GetComponent<T>();
-            if (targetObj == null)
+            // 4. 队列中无空闲对象，创建新对象
+            else
             {
-                targetObj = newObj.AddComponent<T>();
-                Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 预制体缺少{typeof(T).Name}组件，已自动添加");
+                GameObject newObj = Object.Instantiate(prefab, position, rotation, parent);
+                targetObj = newObj.GetComponent<T>();
+                if (targetObj == null)
+                {
+                    targetObj = newObj.AddComponent<T>();
+                    Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 预制体缺少{typeof(T).Name}组件，已自动添加");
+                }
+                newObj.name = $"{prefab.name}_Pooled";
+                newObj.transform.SetParent(parent);
+                newObj.transform.position = position;
+                newObj.transform.rotation = rotation;
+                newObj.transform.SetAsLastSibling();
+                newObj.gameObject.SetActive(true);
             }
-            newObj.name = $"{prefab.name}_Pooled";
-        }
 
-        return targetObj;
+            return targetObj;
+        }
     }
 
     /// <summary>
@@ -92,13 +104,13 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// </summary>
     /// <param name="prefab">对象对应的原始预制体</param>
     /// <param name="obj">待回收的对象</param>
-    public void RecycleObject(GameObject prefab, T obj)
+    public bool RecycleObject(GameObject prefab, T obj)
     {
         // 1. 验证参数有效性
         if (prefab == null || obj == null)
         {
             Debug.LogError($"[{typeof(T).Name}ObjectPool] 回收参数不能为空！");
-            return;
+            return false;
         }
 
         // 2. 如果该预制体的缓存队列不存在，创建新队列
@@ -107,13 +119,30 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
             _poolDict.Add(prefab, new Queue<T>());
         }
 
-        // 3. 重置对象状态并回收
-        var objTransform = obj.transform;
-        objTransform.SetParent(_poolRoot); // 归位到对象池根节点
-        objTransform.localScale = Vector3.one;
-        objTransform.rotation = Quaternion.Euler(Vector3.zero);
-        obj.gameObject.SetActive(false);   // 隐藏对象
-        _poolDict[prefab].Enqueue(obj);    // 加入缓存队列
+        var objectQueue = _poolDict[prefab];
+        lock (objectQueue)
+        {
+            // 3. 检查对象池大小限制
+            // Debug.LogError($"{typeof(T).Name}  prefab:{prefab.name} {objectQueue.Count}");
+            if (objectQueue.Count >= _maxPoolSize)
+            {
+                Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 对象池已满，销毁多余对象: {prefab.name}");
+                obj.Destroy();
+                Object.Destroy(obj.gameObject);
+                return true;
+            }
+
+            // 4. 重置对象状态并回收
+            var objTransform = obj.transform;
+            objTransform.DOKill();
+            objTransform.SetParent(_poolRoot); // 归位到对象池根节点
+            objTransform.localScale = Vector3.one;
+            objTransform.position = Vector3.zero;
+            objTransform.rotation = Quaternion.identity;
+            obj.gameObject.SetActive(false);   // 隐藏对象
+            objectQueue.Enqueue(obj);    // 加入缓存队列
+        }
+        return true;
     }
 
     /// <summary>
@@ -125,13 +154,26 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
         if (_poolDict.ContainsKey(prefab))
         {
             var objectQueue = _poolDict[prefab];
-            while (objectQueue.Count > 0)
+            lock (objectQueue)
             {
-                var obj = objectQueue.Dequeue();
-                if (obj != null)
+                while (objectQueue.Count > 0)
                 {
-                    obj.Destroy();
-                    Object.Destroy(obj.gameObject);
+                    var obj = objectQueue.Dequeue();
+                    if (obj != null)
+                    {
+                        try
+                        {
+                            obj.Destroy();
+                        }
+                        catch (System.Exception e)
+                        {
+                            Debug.LogError($"[{typeof(T).Name}ObjectPool] 销毁对象时出错: {e.Message}");
+                        }
+                        finally
+                        {
+                            Object.Destroy(obj.gameObject);
+                        }
+                    }
                 }
             }
             _poolDict.Remove(prefab);
@@ -143,17 +185,10 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// </summary>
     public void ClearAllPool()
     {
-        foreach (var keyValue in _poolDict)
+        var prefabKeys = new List<GameObject>(_poolDict.Keys);
+        foreach (var prefab in prefabKeys)
         {
-            var objectQueue = keyValue.Value;
-            while (objectQueue.Count > 0)
-            {
-                var obj = objectQueue.Dequeue();
-                if (obj != null)
-                {
-                    Object.Destroy(obj.gameObject);
-                }
-            }
+            ClearPool(prefab);
         }
         _poolDict.Clear();
     }

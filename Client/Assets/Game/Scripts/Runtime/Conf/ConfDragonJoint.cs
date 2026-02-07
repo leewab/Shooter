@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfDragonJoint
 // 表描述: 龙骨
-// 生成时间: 2026-01-27 23:23:00
+// 生成时间: 2026-02-04 22:32:24
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -25,11 +25,41 @@ namespace GameConfig
         public int Health { get; set; } = 0;
 
         /// <summary>
+        /// 节点类型
+        /// </summary>
+        [JsonProperty("Type")]
+        public int Type { get; set; } = 0;
+
+        /// <summary>
+        /// 受击特效
+        /// </summary>
+        [JsonProperty("DamageEffect")]
+        public string DamageEffect { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 受击音效
+        /// </summary>
+        [JsonProperty("DamageAudio")]
+        public string DamageAudio { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 击毁特效
+        /// </summary>
+        [JsonProperty("DestroyEffect")]
+        public string DestroyEffect { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 击毁音效
+        /// </summary>
+        [JsonProperty("DestroyAudio")]
+        public string DestroyAudio { get; set; } = string.Empty;
+
+        /// <summary>
         /// 返回对象的字符串表示
         /// </summary>
         public override string ToString()
         {
-            return $"ConfDragonJoint " + string.Join(", ", new string[] { $"Id={Id}", $"Health={Health}" });
+            return $"ConfDragonJoint " + string.Join(", ", new string[] { $"Id={Id}", $"Health={Health}", $"Type={Type}", $"DamageEffect={DamageEffect}", $"DamageAudio={DamageAudio}", $"DestroyEffect={DestroyEffect}", $"DestroyAudio={DestroyAudio}" });
         }
     }
 }
