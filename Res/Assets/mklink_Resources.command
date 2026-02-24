@@ -1,0 +1,1 @@
+ln -s "/Users/leewab/Documents/Project/Unity/Shooter/Res/Assets/Product" "/Users/leewab/Documents/Project/Unity/Shooter/Client/Assets/Resources/Product" 

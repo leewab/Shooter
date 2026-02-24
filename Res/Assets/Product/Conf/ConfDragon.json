@@ -5,7 +5,7 @@
     "NormalMoveSpeed": 5,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -31,7 +31,7 @@
     "NormalMoveSpeed": 5,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -57,7 +57,7 @@
     "NormalMoveSpeed": 6,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -83,7 +83,7 @@
     "NormalMoveSpeed": 6,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -109,7 +109,7 @@
     "NormalMoveSpeed": 7,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       4,
@@ -135,7 +135,7 @@
     "NormalMoveSpeed": 7,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       2,
@@ -161,7 +161,7 @@
     "NormalMoveSpeed": 8,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -187,7 +187,7 @@
     "NormalMoveSpeed": 8,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       2,
@@ -213,7 +213,7 @@
     "NormalMoveSpeed": 9,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       1,
@@ -239,7 +239,7 @@
     "NormalMoveSpeed": 9,
     "MaxMoveSpeed": 60,
     "MaxSpeedDurationTime": 8.0,
-    "DragonJointSpacing": 8.0,
+    "DragonJointSpacing": 10.0,
     "PositionSmoothness": 10.0,
     "DragonJoints": [
       2,
