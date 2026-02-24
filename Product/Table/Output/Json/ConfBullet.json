@@ -1,7 +1,7 @@
 ﻿[
   {
     "Id": 1,
-    "BulletName": "Bullet",
+    "BulletName": "Product/Game/Icon/Bullet/Bullet_0.png",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -17,7 +17,7 @@
   },
   {
     "Id": 2,
-    "BulletName": "Bullet",
+    "BulletName": "Product/Game/Icon/Bullet/Bullet_1.png",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -33,7 +33,7 @@
   },
   {
     "Id": 3,
-    "BulletName": "Bullet",
+    "BulletName": "Product/Game/Icon/Bullet/Bullet_2.png",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,
@@ -49,23 +49,7 @@
   },
   {
     "Id": 4,
-    "BulletName": "Bullet",
-    "Damage": 1,
-    "Speed": 170.0,
-    "MaxTravelDistance": 200.0,
-    "StartScale": 1.5,
-    "ScaleDuration": 1.0,
-    "HitEffectName": "Effect_BulletHit",
-    "HitSoundName": "Audio_BulletHit",
-    "HitStopDuration": 0.1,
-    "ScreenShakeIntensity": 0.5,
-    "ScreenShakeDuration": 0.5,
-    "MissEffectName": "Effect_BulletMiss",
-    "MissSoundName": "Audio_BulletMiss"
-  },
-  {
-    "Id": 5,
-    "BulletName": "Bullet",
+    "BulletName": "Product/Game/Icon/Bullet/Bullet_3.png",
     "Damage": 1,
     "Speed": 170.0,
     "MaxTravelDistance": 200.0,

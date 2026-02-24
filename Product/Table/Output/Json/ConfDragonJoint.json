@@ -1,6 +1,7 @@
 ﻿[
   {
     "Id": 1,
+    "Prefab": "Product/Game/Prefab/DragonPart.prefab",
     "Health": 3,
     "Type": 0,
     "DamageEffect": "",
@@ -10,6 +11,7 @@
   },
   {
     "Id": 2,
+    "Prefab": "Product/Game/Prefab/DragonPart.prefab",
     "Health": 2,
     "Type": 1,
     "DamageEffect": "",
@@ -19,6 +21,7 @@
   },
   {
     "Id": 3,
+    "Prefab": "Product/Game/Prefab/DragonPart.prefab",
     "Health": 3,
     "Type": 2,
     "DamageEffect": "",
@@ -28,17 +31,9 @@
   },
   {
     "Id": 4,
+    "Prefab": "Product/Game/Prefab/DragonPart.prefab",
     "Health": 2,
     "Type": 3,
-    "DamageEffect": "",
-    "DamageAudio": "",
-    "DestroyEffect": "",
-    "DestroyAudio": ""
-  },
-  {
-    "Id": 5,
-    "Health": 3,
-    "Type": 4,
     "DamageEffect": "",
     "DamageAudio": "",
     "DestroyEffect": "",
