@@ -9,15 +9,13 @@ namespace GameUI
     {
         [Header("UI组件")]
         [SerializeField] private Button btnFinish;
-        [SerializeField] private Button btnAgain;
-        [SerializeField] private Text titleText;
-        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private Button btnNext;
 
         protected override void OnAwake()
         {
             // 绑定按钮事件
             btnFinish.SetOnClick(OnFinishButtonClick);
-            btnAgain.SetOnClick(OnAgainButtonClick);
+            btnNext.SetOnClick(OnNextButtonClick);
             panelName = "UIGameSuccessPanel";
         }
 
@@ -29,20 +27,7 @@ namespace GameUI
 
         protected override void OnOpen(object args)
         {
-            // // 打开时的逻辑
-            // Debug.Log($"[ExamplePanel] Opened with args: {args}");
-            //
-            // // 如果有传入参数，可以在这里处理
-            // if (args is string message)
-            // {
-            //     titleText?.SetTextSafe(message);
-            // }
 
-            // 播放淡入动画
-            if (canvasGroup != null)
-            {
-                StartCoroutine(UIAnimationHelper.FadeIn(canvasGroup, 0.3f));
-            }
         }
 
         protected override void OnClose()
@@ -50,14 +35,6 @@ namespace GameUI
             // 关闭时的逻辑
             Debug.Log($"[ExamplePanel] Closed");
 
-            // 播放淡出动画
-            if (canvasGroup != null)
-            {
-                StartCoroutine(UIAnimationHelper.FadeOut(canvasGroup, 0.2f, () =>
-                {
-                    base.OnClose();
-                }));
-            }
         }
 
         protected override void OnPause()
@@ -78,7 +55,7 @@ namespace GameUI
             LevelManager.Instance.StopGame();
         }
 
-        private void OnAgainButtonClick()
+        private void OnNextButtonClick()
         {
             Close();
             LevelManager.Instance.StartNextLevel();

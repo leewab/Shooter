@@ -94,6 +94,7 @@ namespace Framework.UIFramework
 
             gameObject.SetActive(true);
             IsOpen = true;
+            OpenAnimator();
             OnOpen(args);
         }
 
@@ -105,7 +106,7 @@ namespace Framework.UIFramework
             if (!IsOpen) return;
 
             IsOpen = false;
-            OnClose();
+            CloseAnimator(OnClose);
             gameObject.SetActive(false);
         }
 
@@ -125,6 +126,38 @@ namespace Framework.UIFramework
         {
             if (!IsOpen) return;
             OnResume();
+        }
+
+        #endregion
+
+
+        #region 通用方法
+
+        [SerializeField] private CanvasGroup canvasGroup;
+
+        private void OpenAnimator()
+        {
+            // 播放淡入动画
+            if (canvasGroup != null)
+            {
+                StartCoroutine(UIAnimationHelper.FadeIn(canvasGroup, 0.3f));
+            }
+        }
+
+        private void CloseAnimator(Action callback)
+        {
+            // 播放淡出动画
+            if (canvasGroup != null)
+            {
+                StartCoroutine(UIAnimationHelper.FadeOut(canvasGroup, 0.2f, () =>
+                {
+                    callback?.Invoke();
+                }));
+            }
+            else
+            {
+                callback?.Invoke();
+            }
         }
 
         #endregion

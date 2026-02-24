@@ -69,7 +69,22 @@ namespace Gameplay
 
             return clip;
         }
-        
+
+        /// <summary>
+        /// 播放音效
+        /// </summary>
+        public void PlaySound(AudioSource audioSource, string soundName)
+        {
+            if (audioSource == null) return;
+            if (string.IsNullOrEmpty(soundName)) return;
+            AudioClip clip = GetSound(soundName);
+            audioSource.clip = clip;
+            audioSource.playOnAwake = false;
+            // 2D音效
+            audioSource.spatialBlend = 0f;
+            audioSource.Play();
+        }
+
         #endregion
     }
 }

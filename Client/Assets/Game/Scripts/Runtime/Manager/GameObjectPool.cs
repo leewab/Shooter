@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using Gameplay;
+using ResKit;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -11,7 +13,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
 {
     
     // 缓存池：键为预制体，值为该预制体对应的空闲对象队列
-    private Dictionary<GameObject, Queue<T>> _poolDict = new Dictionary<GameObject, Queue<T>>();
+    private Dictionary<string, Queue<T>> _poolDict = new Dictionary<string, Queue<T>>();
     
     // 对象池根节点（用于整理Hierarchy面板，避免对象混乱）
     private Transform _poolRoot;
@@ -43,22 +45,22 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// <param name="position">对象生成位置</param>
     /// <param name="rotation">对象生成旋转</param>
     /// <returns>复用或新创建的对象</returns>
-    public T GetObject(GameObject prefab, Transform parent, Vector3 position, Quaternion rotation)
+    public T GetObject(string prefabPath, Transform parent, Vector3 position, Quaternion rotation)
     {
         // 1. 验证预制体有效性
-        if (prefab == null)
+        if (string.IsNullOrEmpty(prefabPath))
         {
-            Debug.LogError($"[{typeof(T).Name}ObjectPool] 预制体不能为空！");
+            Debug.LogError($"[{typeof(T).Name}ObjectPool] 预制体路径不能为空！");
             return null;
         }
 
         // 2. 如果该预制体的缓存队列不存在，创建新队列
-        if (!_poolDict.ContainsKey(prefab))
+        if (!_poolDict.ContainsKey(prefabPath))
         {
-            _poolDict.Add(prefab, new Queue<T>());
+            _poolDict.Add(prefabPath, new Queue<T>());
         }
 
-        var objectQueue = _poolDict[prefab];
+        var objectQueue = _poolDict[prefabPath];
         T targetObj = null;
 
         // 3. 队列中有空闲对象，直接复用
@@ -80,13 +82,10 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
             // 4. 队列中无空闲对象，创建新对象
             else
             {
+                var prefab = ResourceManager.Instance.Load<GameObject>(prefabPath);
                 GameObject newObj = Object.Instantiate(prefab, position, rotation, parent);
-                targetObj = newObj.GetComponent<T>();
-                if (targetObj == null)
-                {
-                    targetObj = newObj.AddComponent<T>();
-                    Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 预制体缺少{typeof(T).Name}组件，已自动添加");
-                }
+                targetObj = newObj.GetOrAddComponent<T>();
+                targetObj.PrefabPath = prefabPath;
                 newObj.name = $"{prefab.name}_Pooled";
                 newObj.transform.SetParent(parent);
                 newObj.transform.position = position;
@@ -104,31 +103,33 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// </summary>
     /// <param name="prefab">对象对应的原始预制体</param>
     /// <param name="obj">待回收的对象</param>
-    public bool RecycleObject(GameObject prefab, T obj)
+    public bool RecycleObject(T obj)
     {
         // 1. 验证参数有效性
-        if (prefab == null || obj == null)
+        if (obj == null)
         {
             Debug.LogError($"[{typeof(T).Name}ObjectPool] 回收参数不能为空！");
             return false;
         }
 
         // 2. 如果该预制体的缓存队列不存在，创建新队列
-        if (!_poolDict.ContainsKey(prefab))
+        var prefabPath = obj.PrefabPath;
+        if (!_poolDict.ContainsKey(prefabPath))
         {
-            _poolDict.Add(prefab, new Queue<T>());
+            _poolDict.Add(prefabPath, new Queue<T>());
         }
 
-        var objectQueue = _poolDict[prefab];
+        var objectQueue = _poolDict[prefabPath];
         lock (objectQueue)
         {
             // 3. 检查对象池大小限制
             // Debug.LogError($"{typeof(T).Name}  prefab:{prefab.name} {objectQueue.Count}");
             if (objectQueue.Count >= _maxPoolSize)
             {
-                Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 对象池已满，销毁多余对象: {prefab.name}");
+                Debug.LogWarning($"[{typeof(T).Name}ObjectPool] 对象池已满，销毁多余对象: {prefabPath}");
                 obj.Destroy();
                 Object.Destroy(obj.gameObject);
+                ResourceManager.Instance.Release(prefabPath);
                 return true;
             }
 
@@ -149,11 +150,11 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// 清空指定预制体的缓存对象
     /// </summary>
     /// <param name="prefab">目标预制体</param>
-    public void ClearPool(GameObject prefab)
+    public void ClearPool(string prefabPath)
     {
-        if (_poolDict.ContainsKey(prefab))
+        if (_poolDict.ContainsKey(prefabPath))
         {
-            var objectQueue = _poolDict[prefab];
+            var objectQueue = _poolDict[prefabPath];
             lock (objectQueue)
             {
                 while (objectQueue.Count > 0)
@@ -172,11 +173,12 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
                         finally
                         {
                             Object.Destroy(obj.gameObject);
+                            ResourceManager.Instance.Release(prefabPath);
                         }
                     }
                 }
             }
-            _poolDict.Remove(prefab);
+            _poolDict.Remove(prefabPath);
         }
     }
 
@@ -185,7 +187,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
     /// </summary>
     public void ClearAllPool()
     {
-        var prefabKeys = new List<GameObject>(_poolDict.Keys);
+        var prefabKeys = new List<string>(_poolDict.Keys);
         foreach (var prefab in prefabKeys)
         {
             ClearPool(prefab);

@@ -349,7 +349,7 @@ namespace Framework.UIFramework
             // 如果不是完整路径，添加默认前缀
             if (!assetKey.StartsWith("Assets/"))
             {
-                return $"{PathDefine.PATH_RES_PRODUCT_DIR}/UI/{assetKey}.prefab";
+                return $"{PathDefine.PATH_RES_PRODUCT_DIR}/UI/Prefab/{assetKey}.prefab";
             }
 
             return assetKey;

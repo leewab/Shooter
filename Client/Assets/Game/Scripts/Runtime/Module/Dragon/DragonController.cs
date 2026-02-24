@@ -21,8 +21,8 @@ public class DragonController : SingletonMono<DragonController>
     // 所有节点距离
     private List<float> _BonesDistances;
     // 所有的龙骨信息
-    private List<DragonBoneInfo> _DragonBonesInfos;
-    public List<DragonBoneInfo> DragonBonesInfos => _DragonBonesInfos;
+    private List<int> _DragonBonesInfos;
+    public List<int> DragonBonesInfos => _DragonBonesInfos;
 
     // 私有变量
     private ConfDragon _ConfDragon;
@@ -47,6 +47,11 @@ public class DragonController : SingletonMono<DragonController>
         UpdateSpeed();
         UpdateHeadPosition();
         UpdateJointsPosition();
+        // 判断游戏结果
+        if (_DragonBones.Count <= 0)
+        {
+            OnGameSuccess();
+        }
     }
     
     private void OnDestroy()
@@ -89,12 +94,10 @@ public class DragonController : SingletonMono<DragonController>
         if (_ConfDragon == null) return;
         int[] dragonJoints = _ConfDragon.DragonJoints;
         int dragonJointNum = dragonJoints.Length;
-        _DragonBonesInfos = new List<DragonBoneInfo>(dragonJointNum);
+        _DragonBonesInfos = new List<int>(dragonJointNum);
         for (int i = 0; i < dragonJoints.Length; i++)
         {
-            var id = dragonJoints[i];
-            var confJoint = ConfDragonJoint.GetConf<ConfDragonJoint>(id);
-            _DragonBonesInfos.Add(new DragonBoneInfo(confJoint.Type, confJoint.Health));
+            _DragonBonesInfos.Add(dragonJoints[i]);
         }
     }
     
@@ -115,9 +118,9 @@ public class DragonController : SingletonMono<DragonController>
         }
         
         int index = 0;
-        _DragonBones.Add(GenerateBones(jointTail, DragonJointType.Tail, ColorType.None, 0, index++));
+        // _DragonBones.Add(GenerateBones(jointTail, DragonJointType.Tail, ColorType.None, 0, index++));
         _DragonBones.AddRange(CreateBody(ref index));
-        _DragonBones.Add(GenerateBones(jointHead, DragonJointType.Head, ColorType.None, 0, index++));
+        // _DragonBones.Add(GenerateBones(jointHead, DragonJointType.Head, ColorType.None, 0, index++));
     }
 
     private List<DragonJoint> CreateBody(ref int index)
@@ -126,33 +129,21 @@ public class DragonController : SingletonMono<DragonController>
         List<DragonJoint> bodyJoints = new List<DragonJoint>(dragonBoneNum);
         for (int i = 0; i < dragonBoneNum; i++)
         {
-            var dragonBone = _DragonBonesInfos[i];
-            ColorType colorType = (ColorType)dragonBone.Type;
-            bodyJoints.Add(GenerateBones(jointBody, DragonJointType.Body, colorType, dragonBone.Health, index++));
+            bodyJoints.Add(GenerateBones(_DragonBonesInfos[i], DragonJointType.Body, index++));
         }
 
         return bodyJoints;
     }
     
-    private DragonJoint GenerateBones(GameObject prefab, DragonJointType type, ColorType colorType, int health, int index)
+    private DragonJoint GenerateBones(int dragonId, DragonJointType type, int index)
     {
-        GameObject jointObj = prefab != null ? Instantiate(prefab, transform) : new GameObject($"DragonJoint_{type}_{index}");
-        DragonJoint joint = jointObj.GetComponent<DragonJoint>() ?? jointObj.AddComponent<DragonJoint>();
+        DragonJoint joint = DragonManager.Instance.GenerateBone(dragonId, index);
 
         if (type == DragonJointType.Body)
         {
             joint.OnDestroyed -= OnJointDestroyed;
             joint.OnDestroyed += OnJointDestroyed;
         }
-        
-        joint.SetData(new DragonJointData()
-        {
-            JointType = type,
-            ColorType = colorType,
-            JointHealth = health,
-            JointIndex = index,
-            JointId = (int)type + 1
-        });
 
         return joint;
     }
@@ -245,11 +236,6 @@ public class DragonController : SingletonMono<DragonController>
             {
                 joint.transform.rotation = result.rotation;
             }
-        }
-        
-        if (_DragonBones.Count <= 2)
-        {
-            OnGameSuccess();
         }
     }
     

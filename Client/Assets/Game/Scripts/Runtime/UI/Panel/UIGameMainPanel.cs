@@ -5,18 +5,17 @@ using UnityEngine.UI;
 
 namespace GameUI
 {
-    public class UIGameFailedPanel : UIPanel
+    public class UIGameMainPanel : UIPanel
     {
         [Header("UI组件")]
-        [SerializeField] private Button btnFinish;
-        [SerializeField] private Button btnAgain;
+        [SerializeField] private Button btnSpeed;
+        [SerializeField] private Text titleText;
 
         protected override void OnAwake()
         {
             // 绑定按钮事件
-            btnFinish.SetOnClick(OnFinishButtonClick);
-            btnAgain.SetOnClick(OnAgainButtonClick);
-            panelName = "UIGameFailedPanel";
+            btnSpeed.SetOnClick(OnSpeedButtonClick);
+            panelName = "UIGameMainPanel";
         }
 
         protected override void OnInitialize()
@@ -27,12 +26,12 @@ namespace GameUI
 
         protected override void OnOpen(object args)
         {
-
-
+            LevelManager.Instance.OnLevelChange += OnLevelChange;
         }
 
         protected override void OnClose()
         {
+            LevelManager.Instance.OnLevelChange -= OnLevelChange;
             // 关闭时的逻辑
             Debug.Log($"[ExamplePanel] Closed");
 
@@ -52,15 +51,22 @@ namespace GameUI
 
         private void OnFinishButtonClick()
         {
-            Close();
-            LevelManager.Instance.StopGame();
+            
         }
 
-        private void OnAgainButtonClick()
+        private void OnSpeedButtonClick()
         {
-            Close();
-            LevelManager.Instance.RestartLevel();
+           
         }
-        
+
+        private void OnLevelChange(int level)
+        {
+            if (titleText)
+            {
+                titleText.text = $"第{level}关";
+            }
+        }
+
+
     }
 }

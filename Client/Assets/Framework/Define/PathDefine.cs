@@ -6,4 +6,6 @@
     public const string DragonHeadPath = "Product/Game/Prefab/DragonHead.prefab";
     public const string DragonTailPath = "Product/Game/Prefab/DragonTail.prefab";
     public const string DragonBodyPath = "Product/Game/Prefab/DragonPart.prefab";
+    public const string TurretPath = "Product/Game/Prefab/Turret.prefab";
+    public const string BulletPath = "Product/Game/Prefab/Bullet.prefab";
 }

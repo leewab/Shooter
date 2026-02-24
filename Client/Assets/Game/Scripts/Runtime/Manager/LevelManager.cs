@@ -1,8 +1,12 @@
-﻿namespace Gameplay
+﻿using System;
+
+namespace Gameplay
 {
     public class LevelManager : Singleton<LevelManager>
     {
         private int _LevelID = 1;
+
+        public Action<int> OnLevelChange;
 
         public int GetCurrentLevel()
         {
@@ -17,6 +21,7 @@
         public void StartNextLevel()
         {
             _LevelID++;
+            OnLevelChange?.Invoke(_LevelID);
             GameController.Instance.RestartGame();
         }
 

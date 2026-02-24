@@ -103,6 +103,9 @@ namespace Gameplay
                 dragonController.StartMoving();
             }
 
+            // 游戏主界面
+            UIManager.Open<UIGameMainPanel>();
+
             Debug.Log("[GameController] Game Started");
         }
 

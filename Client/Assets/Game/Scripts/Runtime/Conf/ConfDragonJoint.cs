@@ -2,7 +2,7 @@
 // 自动生成的C#配置类
 // 表名称: ConfDragonJoint
 // 表描述: 龙骨
-// 生成时间: 2026-02-04 22:32:24
+// 生成时间: 2026-02-20 15:11:08
 // 工具: ExcelToJsonTool
 // 请勿手动修改此文件，重新生成将被覆盖
 // ===========================================
@@ -18,6 +18,12 @@ namespace GameConfig
     [Serializable]
     public class ConfDragonJoint  : BaseConf
     {
+        /// <summary>
+        /// 资源
+        /// </summary>
+        [JsonProperty("Prefab")]
+        public string Prefab { get; set; } = string.Empty;
+
         /// <summary>
         /// 节点生命
         /// </summary>
@@ -59,7 +65,7 @@ namespace GameConfig
         /// </summary>
         public override string ToString()
         {
-            return $"ConfDragonJoint " + string.Join(", ", new string[] { $"Id={Id}", $"Health={Health}", $"Type={Type}", $"DamageEffect={DamageEffect}", $"DamageAudio={DamageAudio}", $"DestroyEffect={DestroyEffect}", $"DestroyAudio={DestroyAudio}" });
+            return $"ConfDragonJoint " + string.Join(", ", new string[] { $"Id={Id}", $"Prefab={Prefab}", $"Health={Health}", $"Type={Type}", $"DamageEffect={DamageEffect}", $"DamageAudio={DamageAudio}", $"DestroyEffect={DestroyEffect}", $"DestroyAudio={DestroyAudio}" });
         }
     }
 }

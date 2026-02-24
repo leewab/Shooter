@@ -1,38 +1,6 @@
 using System;
-using System.Text;
-using GameConfig;
 using Gameplay;
 using UnityEngine;
-
-// /// <summary>
-// /// 炮台实体类（存储核心状态和信息）
-// /// </summary>
-// public struct TurretData
-// {
-//     // 所在列（0/1/2，固定3列）
-//     public int Col { get; set; } 
-//     // 所在行
-//     public int Row { get; set; } 
-//     public TurretInfo TurretInfo { get; set; }
-//
-//     public TurretData(int row, int col, TurretInfo turretInfo)
-//     {
-//         Col = col;
-//         Row = row;
-//         TurretInfo = turretInfo;
-//     }
-//
-//     public void RefreshPos(int row, int col)
-//     {
-//         Col = col;
-//         Row = row;
-//     }
-//
-//     public string ToString()
-//     {
-//         return $"Row:{Row}Col:{Col} Type:{((ColorType)TurretInfo.Type).ToString()} AttackNum:{TurretInfo.AttackNum}";
-//     }
-// }
 
 /// <summary>
 /// 3×n炮台网格管理器（承载核心算法）

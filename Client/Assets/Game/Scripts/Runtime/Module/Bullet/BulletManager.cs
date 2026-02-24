@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using GameConfig;
-using ResKit;
-using UnityEditor;
+﻿using ResKit;
 using UnityEngine;
 
 namespace Gameplay
@@ -9,8 +6,6 @@ namespace Gameplay
     public class BulletManager : Singleton<BulletManager>
     {
         #region Bullet
-
-        private static readonly string BulletPrefabPath = $"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Prefab/Bullet.prefab";
 
         private Transform _bulletPool;
         public Transform BulletPool
@@ -26,39 +21,21 @@ namespace Gameplay
             }
         }
 
-        private GameObject _bulletPrefab;
-        public GameObject BulletPrefab
-        {
-            get
-            {
-                if (_bulletPrefab == null)
-                {
-                    _bulletPrefab = ResourceManager.Instance.Load<GameObject>(BulletPrefabPath);
-                }
-
-                if (_bulletPrefab == null)
-                {
-                    Debug.LogError("加载预制体失败！" + BulletPrefabPath);
-                }
-                return _bulletPrefab;
-            }
-        }
-        
         public BaseBullet InstantiateBullet(string bulletName, Vector3 position, Quaternion rotation)
         {
-            return GameObjectPool<BaseBullet>.Instance.GetObject(BulletPrefab, BulletPool, position, rotation);
+            return GameObjectPool<BaseBullet>.Instance.GetObject(bulletName, BulletPool, position, rotation);
         }
 
         public void RecycleBullet(BaseBullet bullet)
         {
-            GameObjectPool<BaseBullet>.Instance.RecycleObject(BulletPrefab, bullet);
+            GameObjectPool<BaseBullet>.Instance.RecycleObject(bullet);
         }
 
         #endregion
         
         public Sprite GetBulletSprite(string spriteName)
         {
-            return ResourceManager.Instance.Load<Sprite>($"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Icon/Bullet/{spriteName}");
+            return ResourceManager.Instance.Load<Sprite>(spriteName);
         }
     }
 }

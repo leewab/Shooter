@@ -29,7 +29,6 @@ namespace Gameplay
             }
         }
 
-        private static int GenerateEntityNum = 0;
         public void RefreshTurrets(int removeRow, int removeCol, TurretInfo[,] turretGrid)
         {
             if (turretGrid == null) return;
@@ -73,7 +72,6 @@ namespace Gameplay
                 }
                 else
                 {
-                    GenerateEntityNum++;
                     // 生成新的TurretEntity
                     var turretEntity = GenerateTurretEntity(turretData, new TurretPos(i, removeCol));
                     if (turretEntity != null)
@@ -120,7 +118,7 @@ namespace Gameplay
         {
             Vector2 pos = _StartPostion + new Vector2(turretPos.ColIndex * _Space.x, - turretPos.RowIndex * _Space.y);
             Vector3 turretPosition = new Vector3(pos.x, pos.y, 0);
-            var turret = GenerateTurret(turretPosition) as TurretEntity;
+            var turret = GenerateTurret(turretInfo.Id, turretPosition) as TurretEntity;
             if (turret != null)
             {
                 turret.Init(turretInfo, turretPos);
@@ -133,9 +131,10 @@ namespace Gameplay
             return turret;
         }
 
-        private BaseTurret GenerateTurret(Vector3 turretPosition)
+        private BaseTurret GenerateTurret(int turretId, Vector3 turretPosition)
         {
-            return TurretManager.Instance.InstantiateTurret(transform, turretPosition, Quaternion.identity);
+            //var confTurret = ConfTurret.GetConf<ConfTurret>(turretId);
+            return TurretManager.Instance.InstantiateTurret(PathDefine.TurretPath, transform, turretPosition, Quaternion.identity);
         }
     }
 }

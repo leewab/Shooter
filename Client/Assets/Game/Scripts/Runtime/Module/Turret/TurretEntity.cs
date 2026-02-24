@@ -2,8 +2,8 @@
 using UnityEngine;
 using DG.Tweening;
 using GameConfig;
-using UnityEditor;
 using UnityEngine.UI;
+using Game.Core;
 
 namespace Gameplay
 {
@@ -56,13 +56,14 @@ namespace Gameplay
 
         private void InitializeComponents()
         {
-            if (spriteRenderer != null && _confTurret != null)
-            {
-                spriteRenderer.sprite = TurretManager.Instance.GetTurretSprite(_confTurret.Icon);
-            }
             if (firePoint == null)
             {
                 firePoint = transform;
+            }
+            if (spriteRenderer)
+            {
+                var turretSprite = TurretManager.Instance.GetSprite(_confTurret.Icon);
+                spriteRenderer.sprite = turretSprite;
             }
         }
 
@@ -84,8 +85,9 @@ namespace Gameplay
 
             PlayRecoilAnimation(direction);
             PlayMuzzleFlash();
+            PlayAttackAudio();
 
-            var bullet = BulletManager.Instance.InstantiateBullet(_bulletName, firePoint.position, Quaternion.identity) as BulletEntity;
+            var bullet = BulletManager.Instance.InstantiateBullet(PathDefine.BulletPath, firePoint.position, Quaternion.identity) as BulletEntity;
             bullet?.Init(_confTurret.Id, _confTurret.ColorType, direction, joint.transform.position);
             bullet?.AddRegister(OnBulletHitCallback);
             
@@ -128,6 +130,13 @@ namespace Gameplay
                 _confTurret.MuzzleEffectName,
                 firePoint.position,
                 transform.rotation);
+        }
+
+        private void PlayAttackAudio()
+        {
+            if (string.IsNullOrEmpty(_confTurret.FireSound)) return;
+            var audioSource = gameObject.GetOrAddComponent<AudioSource>();
+            AudioManager.Instance.PlaySound(audioSource, _confTurret.FireSound);
         }
         
         private void PlayDeadAnimation(float duration)

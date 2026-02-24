@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Framework.UIFramework;
+﻿using Framework.UIFramework;
 
 namespace GameUI
 {
@@ -24,7 +23,17 @@ namespace GameUI
                     PanelType = PanelType.Popup,
                 }
             );
+
+            UIInfos.Add(
+             nameof(UIGameMainPanel),
+             new UIInfo()
+             {
+                 UIPath = "UIGameMainPanel",
+                 PanelType = PanelType.Normal,
+             }
+            );
         }
+
 
     }
 }

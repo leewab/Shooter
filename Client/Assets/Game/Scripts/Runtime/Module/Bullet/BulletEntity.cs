@@ -82,7 +82,7 @@ namespace Gameplay
         {
             if (spriteRenderer != null)
             {
-                var sprite = BulletManager.Instance.GetBulletSprite($"Bullet_{(int)_bulletColor}");
+                var sprite = BulletManager.Instance.GetBulletSprite(_confBulletConfig.BulletName);
                 spriteRenderer.sprite = sprite;
                 spriteRenderer.enabled = true;
             }

@@ -15,7 +15,7 @@ public class TurretMatrixGenerator
         random = seed == 0 ? new Random() : new Random(seed);
     }
 
-    public TurretInfo[,] GenerateTurretMatrix(DragonBoneInfo[] dragonBones, float difficulty, int totalRows = 6)
+    public TurretInfo[,] GenerateTurretMatrix(int[] dragonBones, float difficulty, int totalRows = 6)
     {
         int cols = 3;
         int[,] typeMatrix = new int[totalRows, cols];
@@ -40,7 +40,7 @@ public class TurretMatrixGenerator
     /// <param name="difficulty">难度系数</param>
     /// <param name="totalRows">总行数</param>
     /// <returns>生成的炮台信息</returns>
-    public TurretInfo GenerateTurretInfo(TurretInfo[,] turretInfos, DragonBoneInfo[] dragonBones, float difficulty, int totalRows = 6)
+    public TurretInfo GenerateTurretInfo(TurretInfo[,] turretInfos, int[] dragonBones, float difficulty, int totalRows = 6)
     {
         int rows = turretInfos.GetLength(0);
         int cols = turretInfos.GetLength(1);
@@ -49,7 +49,7 @@ public class TurretMatrixGenerator
         var existingTurretAnalysis = AnalyzeExistingTurrets(turretInfos, rows, cols);
         
         // 2. 分析剩余龙骨的威胁程度（即使龙骨信息为空也能处理）
-        var boneAnalysis = AnalyzeBones(dragonBones ?? new DragonBoneInfo[0]);
+        var boneAnalysis = AnalyzeBones(dragonBones ?? new int[0]);
         
         // 3. 计算综合优先级
         var priorityScores = CalculatePriorityScores(existingTurretAnalysis, boneAnalysis, difficulty);
@@ -75,14 +75,15 @@ public class TurretMatrixGenerator
     }
     
     // 分析龙骨信息，考虑生命值
-    private BoneAnalysis AnalyzeBones(DragonBoneInfo[] dragonBones)
+    private BoneAnalysis AnalyzeBones(int[] dragonBones)
     {
         var analysis = new BoneAnalysis();
         
-        foreach (var bone in dragonBones)
+        foreach (var boneId in dragonBones)
         {
-            int type = bone.Type;
-            int health = bone.Health;
+            var confDragonBone = ConfDragonJoint.GetConf<ConfDragonJoint>(boneId);
+            int type = confDragonBone.Type;
+            int health = confDragonBone.Health;
             
             if (!analysis.TypeHealthSums.ContainsKey(type))
             {
@@ -837,15 +838,3 @@ public struct TurretPos
 }
 
 
-// 龙骨信息结构
-public struct DragonBoneInfo
-{
-    public int Type;
-    public int Health;
-    
-    public DragonBoneInfo(int type, int health)
-    {
-        Type = type;
-        Health = health;
-    }
-}

@@ -2,7 +2,7 @@ using System;
 using GameConfig;
 using UnityEngine;
 using Gameplay;
-using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public enum DragonJointType
 {
@@ -29,7 +29,8 @@ public class DragonJoint : MonoBehaviour
     // 组件
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private MeshRenderer meshRender;
-    
+    [SerializeField] private Text txtHUD;
+
     // 旋转滚动参数
     [Header("旋转滚动参数")]
     [SerializeField] private bool enableRolling = true;
@@ -61,7 +62,7 @@ public class DragonJoint : MonoBehaviour
     {
         if (!_isAlive || !enableRolling) return;
         
-        UpdateRollingRotation();
+        //UpdateRollingRotation();
     }
     
     private void UpdateRollingRotation()
@@ -114,6 +115,14 @@ public class DragonJoint : MonoBehaviour
             meshRender.material.SetColor("_Color", _currentColor); // 设置红色主色调
         }
     }
+
+    private void UpdateHUD()
+    {
+        if (txtHUD)
+        {
+            txtHUD.text = _CurrentHealth.ToString();
+        }
+    }
     
     // 摧毁关节
     private void DestroyJoint()
@@ -155,7 +164,9 @@ public class DragonJoint : MonoBehaviour
         
         _CurrentHealth -= damage;
         OnHealthChanged?.Invoke(_CurrentHealth);
-        
+
+        UpdateHUD();
+
         if (string.IsNullOrEmpty(_ConfigBone.DamageAudio))
         {
             AudioManager.Instance.PlaySound(_ConfigBone.DamageAudio);
@@ -207,7 +218,7 @@ public class DragonJoint : MonoBehaviour
         _isAlive = true;
     }
     
-    public void SetData(DragonJointData jointData)
+    public void InitDragonJoint(DragonJointData jointData)
     {
         gameObject.SetActive(false);
         _isAlive = false;
@@ -216,7 +227,8 @@ public class DragonJoint : MonoBehaviour
         _CurrentHealth = jointData.JointHealth;
         _ConfigBone = ConfDragonJoint.GetConf<ConfDragonJoint>(jointData.JointId);
         InitColorType(jointData.ColorType);
-        
+        UpdateHUD();
+
         _lastPosition = transform.position;
         _totalRotation = 0f;
     }

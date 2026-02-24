@@ -40,41 +40,21 @@ namespace Gameplay
             return Color.white;
         }
 
-        
-        public Sprite GetTurretSprite(string spriteName)
+
+        public BaseTurret InstantiateTurret(string prefabPath, Transform parent, Vector3 position, Quaternion rotation)
         {
-            return ResourceManager.Instance.Load<Sprite>($"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Icon/Turrets/{spriteName}");
-        }
-
-
-        private static readonly string TurretPrefabPath = $"{PathDefine.PATH_RES_PRODUCT_DIR}/Game/Prefab/Turret.prefab";
-
-        private GameObject _turretPrefab;
-        public GameObject TurretPrefab
-        {
-            get
-            {
-                if (_turretPrefab == null)
-                {
-                    _turretPrefab = ResourceManager.Instance.Load<GameObject>(TurretPrefabPath);
-                }
-
-                if (_turretPrefab == null)
-                {
-                    Debug.LogError("加载预制体失败！" + TurretPrefabPath);
-                }
-                return _turretPrefab;
-            }
-        }
-
-        public BaseTurret InstantiateTurret(Transform parent, Vector3 position, Quaternion rotation)
-        {
-            return GameObjectPool<BaseTurret>.Instance.GetObject(TurretPrefab, parent, position, rotation);
+            return GameObjectPool<BaseTurret>.Instance.GetObject(prefabPath, parent, position, rotation);
         }
 
         public bool RecycleTurret(BaseTurret turret)
         {
-            return GameObjectPool<BaseTurret>.Instance.RecycleObject(TurretPrefab, turret);
+            return GameObjectPool<BaseTurret>.Instance.RecycleObject(turret);
         }
+
+        public Sprite GetSprite(string spritePath)
+        {
+            return ResourceManager.Instance.Load<Sprite>(spritePath);
+        }
+
     }
 }
