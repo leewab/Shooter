@@ -43,13 +43,12 @@ public class DragonJoint : MonoBehaviour
     private float _CurrentHealth = 0;
     private Color _currentColor;
     private ColorType _colorType;
-    private bool _isAlive = true;
+    private bool _isLockByBullet = false;
     private DragonJointData _BoneData;
     private ConfDragonJoint _ConfigBone;
     
     // 旋转相关
     private Vector3 _lastPosition;
-    private float _totalRotation = 0f;
     
     private void Awake()
     {
@@ -60,43 +59,9 @@ public class DragonJoint : MonoBehaviour
     
     private void Update()
     {
-        if (!_isAlive || !enableRolling) return;
-        
-        //UpdateRollingRotation();
-    }
-    
-    private void UpdateRollingRotation()
-    {
-        Vector3 currentPosition = transform.position;
-        Vector3 movementDelta = currentPosition - _lastPosition;
-        float movementDistance = movementDelta.magnitude;
-        
-        if (movementDistance > 0.001f)
-        {
-            Vector3 currentRotationAxis;
-            
-            if (autoCalculateAxis)
-            {
-                Vector3 movementDirection = movementDelta.normalized;
-                currentRotationAxis = Vector3.Cross(Vector3.forward, movementDirection);
-                if (currentRotationAxis.magnitude < 0.01f)
-                {
-                    currentRotationAxis = Vector3.forward;
-                }
-            }
-            else
-            {
-                currentRotationAxis = rotationAxis;
-            }
-            
-            float rotationAngle = movementDistance * rollingSpeed * Mathf.Rad2Deg;
-            _totalRotation += rotationAngle;
-            
-            Quaternion rotation = Quaternion.AngleAxis(rotationAngle, currentRotationAxis);
-            transform.rotation = rotation * transform.rotation;
-            
-            _lastPosition = currentPosition;
-        }
+        if (!enableRolling) return;
+        // 球自转
+        // UpdateRollingRotation();
     }
     
     // 设置颜色类型
@@ -127,10 +92,6 @@ public class DragonJoint : MonoBehaviour
     // 摧毁关节
     private void DestroyJoint()
     {
-        if (!_isAlive) return;
-        
-        _isAlive = false;
-        
         if (string.IsNullOrEmpty(_ConfigBone.DestroyAudio))
         {
             AudioManager.Instance.PlaySound(_ConfigBone.DestroyAudio);
@@ -160,8 +121,6 @@ public class DragonJoint : MonoBehaviour
     // 受到伤害
     public void TakeDamage(int damage = 1)
     {
-        if (!_isAlive) return;
-        
         _CurrentHealth -= damage;
         OnHealthChanged?.Invoke(_CurrentHealth);
 
@@ -195,6 +154,18 @@ public class DragonJoint : MonoBehaviour
     {
         return _CurrentHealth > 0;
     }
+
+    public bool IsActive()
+    {
+        bool isScopeX = transform.position.x is <= 41f and >= -41f;
+        bool isScopeY = transform.position.y is <= 61f and >= -61f;
+        bool isScope = isScopeY && isScopeX;
+        if (!isScope)
+        {
+            Debug.Log("没有在攻击范围！" + transform.position + ", " + transform.gameObject.name);
+        }
+        return isScope;
+    }
     
     // 是否为头部
     public bool IsHead()
@@ -213,63 +184,30 @@ public class DragonJoint : MonoBehaviour
         return _BoneData.JointType == DragonJointType.Body;
     }
     
-    public void ActiveAlive()
-    {
-        _isAlive = true;
-    }
-    
     public void InitDragonJoint(DragonJointData jointData)
     {
         gameObject.SetActive(false);
-        _isAlive = false;
         _BoneData = jointData;
         BonesIndex = jointData.JointIndex;
         _CurrentHealth = jointData.JointHealth;
-        _ConfigBone = ConfDragonJoint.GetConf<ConfDragonJoint>(jointData.JointId);
+        if (jointData.JointType == DragonJointType.Body)
+        {
+            _ConfigBone = ConfDragonJoint.GetConf<ConfDragonJoint>(jointData.JointId);
+        }
         InitColorType(jointData.ColorType);
         UpdateHUD();
 
         _lastPosition = transform.position;
-        _totalRotation = 0f;
+    }
+
+    public void SetLockByTurret(bool isLock)
+    {
+        _isLockByBullet = isLock;
+    }
+
+    public bool IsLockByTurret()
+    {
+        return _isLockByBullet;
     }
     
-    // 设置旋转滚动参数
-    public void SetRollingParameters(bool enable, float speed, Vector3 axis, bool autoCalcAxis = true)
-    {
-        enableRolling = enable;
-        rollingSpeed = speed;
-        rotationAxis = axis.normalized;
-        autoCalculateAxis = autoCalcAxis;
-    }
-    
-    public void SetRollingEnabled(bool enable)
-    {
-        enableRolling = enable;
-    }
-    
-    public void SetRollingSpeed(float speed)
-    {
-        rollingSpeed = speed;
-    }
-    
-    public void SetRotationAxis(Vector3 axis)
-    {
-        rotationAxis = axis.normalized;
-    }
-    
-    public void SetAutoCalculateAxis(bool autoCalc)
-    {
-        autoCalculateAxis = autoCalc;
-    }
-    
-    public void ResetRotation()
-    {
-        transform.rotation = Quaternion.identity;
-        _totalRotation = 0f;
-    }
-    
-    public float GetTotalRotation()
-    {
-        return _totalRotation;
-    }
 }

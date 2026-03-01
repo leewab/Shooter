@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using GameConfig;
+using UnityEngine;
 
 namespace Gameplay
 {
@@ -9,7 +10,7 @@ namespace Gameplay
 
         public bool IsActive;
         public bool IsOccupy;
-
+        
         public void SetActive(bool isActive)
         {
             this.IsActive = isActive;
@@ -70,8 +71,6 @@ namespace Gameplay
             _TurretEntity = null;
             SetOccupy(false);
         }
-        
-        
         
     }
 }

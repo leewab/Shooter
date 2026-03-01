@@ -159,6 +159,12 @@ namespace Framework.UIFramework
             button.onClick.AddListener(() => action?.Invoke());
         }
 
+        public static void SetOnToggle(this Toggle toggle, Action<bool> action)
+        {
+            toggle.onValueChanged.RemoveAllListeners();
+            toggle.onValueChanged.AddListener(isOn => action?.Invoke(isOn));
+        }
+
         /// <summary>
         /// 安全设置文本
         /// </summary>

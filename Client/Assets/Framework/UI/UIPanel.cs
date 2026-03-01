@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Framework.UIFramework
 {
@@ -130,26 +131,25 @@ namespace Framework.UIFramework
 
         #endregion
 
-
         #region 通用方法
 
-        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private CanvasGroup _CanvasGroup;
 
         private void OpenAnimator()
         {
             // 播放淡入动画
-            if (canvasGroup != null)
+            if (_CanvasGroup != null)
             {
-                StartCoroutine(UIAnimationHelper.FadeIn(canvasGroup, 0.3f));
+                StartCoroutine(UIAnimationHelper.FadeIn(_CanvasGroup, 0.3f));
             }
         }
 
         private void CloseAnimator(Action callback)
         {
             // 播放淡出动画
-            if (canvasGroup != null)
+            if (_CanvasGroup != null)
             {
-                StartCoroutine(UIAnimationHelper.FadeOut(canvasGroup, 0.2f, () =>
+                StartCoroutine(UIAnimationHelper.FadeOut(_CanvasGroup, 0.2f, () =>
                 {
                     callback?.Invoke();
                 }));

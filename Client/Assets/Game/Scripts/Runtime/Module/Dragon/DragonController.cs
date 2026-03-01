@@ -12,9 +12,6 @@ public class DragonController : SingletonMono<DragonController>
     public Action<bool> OnSuccessEvent;
         
     private PathPointData _PathData;
-    private GameObject jointHead;
-    private GameObject jointTail;
-    private GameObject jointBody;
     
     // 所有关节
     private List<DragonJoint> _DragonBones;
@@ -35,10 +32,7 @@ public class DragonController : SingletonMono<DragonController>
 
     private void Start()
     {
-        if (_PathData == null) _PathData = ResourceManager.Instance.Load<PathPointData>(PathDefine.PathDataPath);
-        if (jointHead == null) jointHead = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonHeadPath);
-        if (jointTail == null) jointTail = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonTailPath);
-        if (jointBody == null) jointBody = ResourceManager.Instance.Load<GameObject>(PathDefine.DragonBodyPath);
+        
     }
     
     private void Update()
@@ -47,16 +41,11 @@ public class DragonController : SingletonMono<DragonController>
         UpdateSpeed();
         UpdateHeadPosition();
         UpdateJointsPosition();
-        // 判断游戏结果
-        if (_DragonBones.Count <= 0)
-        {
-            OnGameSuccess();
-        }
+        UpdateGameResult();
     }
     
     private void OnDestroy()
     {
-        _PathData = null;
         ClearDragon();
     }
 
@@ -77,7 +66,7 @@ public class DragonController : SingletonMono<DragonController>
     // 初始化龙
     private void InitializeDragon()
     {
-        if (_PathData == null) return;
+        _PathData = ResourceManager.Instance.Load<PathPointData>(PathDefine.PathDataPath);
         _CurLevelID = LevelManager.Instance.GetCurrentLevel();
         _ConfDragon = ConfDragon.GetConf<ConfDragon>(_CurLevelID);
         _CurSpeed = _ConfDragon.MaxMoveSpeed;
@@ -118,9 +107,9 @@ public class DragonController : SingletonMono<DragonController>
         }
         
         int index = 0;
-        // _DragonBones.Add(GenerateBones(jointTail, DragonJointType.Tail, ColorType.None, 0, index++));
+        _DragonBones.Add(GenerateBones(-1, index++, DragonJointType.Tail));
         _DragonBones.AddRange(CreateBody(ref index));
-        // _DragonBones.Add(GenerateBones(jointHead, DragonJointType.Head, ColorType.None, 0, index++));
+        _DragonBones.Add(GenerateBones(-1, index, DragonJointType.Head));
     }
 
     private List<DragonJoint> CreateBody(ref int index)
@@ -129,16 +118,15 @@ public class DragonController : SingletonMono<DragonController>
         List<DragonJoint> bodyJoints = new List<DragonJoint>(dragonBoneNum);
         for (int i = 0; i < dragonBoneNum; i++)
         {
-            bodyJoints.Add(GenerateBones(_DragonBonesInfos[i], DragonJointType.Body, index++));
+            bodyJoints.Add(GenerateBones(_DragonBonesInfos[i], index++, DragonJointType.Body));
         }
 
         return bodyJoints;
     }
     
-    private DragonJoint GenerateBones(int dragonId, DragonJointType type, int index)
+    private DragonJoint GenerateBones(int dragonId,int index, DragonJointType type)
     {
-        DragonJoint joint = DragonManager.Instance.GenerateBone(dragonId, index);
-
+        DragonJoint joint = DragonManager.Instance.GenerateBone(dragonId, index, type, transform);
         if (type == DragonJointType.Body)
         {
             joint.OnDestroyed -= OnJointDestroyed;
@@ -212,7 +200,6 @@ public class DragonController : SingletonMono<DragonController>
             if (!joint.gameObject.activeSelf)
             {
                 joint.gameObject.SetActive(true);
-                joint.ActiveAlive();
             }
             // 计算目标距离
             float targetDistance = tailDistance + i * _ConfDragon.DragonJointSpacing;
@@ -237,6 +224,33 @@ public class DragonController : SingletonMono<DragonController>
                 joint.transform.rotation = result.rotation;
             }
         }
+    }
+
+    private int _ResultMaxNum = 10;
+    private int _ResultFrame = 0;
+    private void UpdateGameResult()
+    {
+        if (_ResultFrame > 0)
+        {
+            _ResultFrame--;
+            return;
+        }
+        
+        // 1. 龙骨为0 判断为成功
+        if (_DragonBones.Count <= 2)
+        {
+            OnGameSuccess();
+            return;
+        }
+        
+        // 2. 上阵位置占满，无对应攻击目标
+        if (!TurretHandler.Instance.HasValidTurretSeat(_DragonBones))
+        {
+            OnGameOver();
+            return;
+        }
+
+        _ResultFrame = _ResultMaxNum;
     }
     
     // 关节被摧毁时的回调
@@ -284,17 +298,14 @@ public class DragonController : SingletonMono<DragonController>
     
     public void InitDragon()
     {
-        InitializeDragon();
-    }
-
-    public void ResetDragon()
-    {
         StopMoving();
         InitializeDragon();
     }
 
     public void ClearDragon()
     {
+        _PathData = null;
+        StopMoving();
         ClearBones();
         if (_DragonBonesInfos != null)
         {
@@ -314,7 +325,71 @@ public class DragonController : SingletonMono<DragonController>
     /// 查询最近的龙骨节点（不考虑遮挡）
     /// </summary>
     /// <returns></returns>
-    public List<(float, DragonJoint)> FindNearestMatchingJoint(ColorType colorType, Vector3 firePoint)
+    public DragonJoint FindMatchingJoint(ColorType colorType)
+    {
+        if (_DragonBones == null) return null;
+        float minDistance = float.MaxValue;
+        var allJoints = _DragonBones;
+        foreach (var joint in allJoints)
+        {
+            if (!joint.IsAlive() || joint.GetColorType() != colorType || !joint.IsActive()) continue;
+            if (joint.IsHead() || joint.IsTail() || joint.IsLockByTurret()) continue;
+            return joint;
+        }
+
+        return null;
+    }
+    
+    /// <summary>
+    /// 查询是否有未激活的可攻击龙骨
+    /// </summary>
+    /// <param name="colorType"></param>
+    /// <returns></returns>
+    public DragonJoint FindMatchingNoActiveJoint(ColorType colorType)
+    {
+        if (_DragonBones == null) return null;
+        float minDistance = float.MaxValue;
+        var allJoints = _DragonBones;
+        foreach (var joint in allJoints)
+        {
+            if (!joint.IsAlive() || joint.GetColorType() != colorType) continue;
+            if (joint.IsHead() || joint.IsTail() || joint.IsLockByTurret()) continue;
+            return joint;
+        }
+
+        return null;
+    }
+    
+    /// <summary>
+    /// 查询最近的龙骨节点（不考虑遮挡）
+    /// </summary>
+    /// <returns></returns>
+    public (float, DragonJoint) FindNearestMatchingJoint(ColorType colorType, Vector3 firePoint)
+    {
+        if (_DragonBones == null) return (0, null);
+        float minDistance = float.MaxValue;
+        var allJoints = _DragonBones;
+        (float, DragonJoint) targetResult = (9999, null);
+        foreach (var joint in allJoints)
+        {
+            if (!joint.IsAlive() || joint.GetColorType() != colorType) continue;
+            if (joint.IsHead() || joint.IsTail()) continue;
+
+            float distance = Vector2.Distance(firePoint, joint.transform.position);
+            if (targetResult.Item1 > distance)
+            {
+                targetResult = (distance, joint);
+            }
+        }
+
+        return targetResult;
+    }
+    
+    /// <summary>
+    /// 查询最近的龙骨节点（不考虑遮挡）
+    /// </summary>
+    /// <returns></returns>
+    public List<(float, DragonJoint)> FindNearestMatchingJoints(ColorType colorType, Vector3 firePoint)
     {
         if (_DragonBones == null) return null;
         float minDistance = float.MaxValue;
@@ -333,7 +408,7 @@ public class DragonController : SingletonMono<DragonController>
     }
 
     /// <summary>
-    /// 查询最近的且未被遮挡的龙骨节点（性能优化版本）
+    /// 查询最近的且未被遮挡的龙骨节点
     /// </summary>
     /// <param name="colorType">炮台颜色类型</param>
     /// <param name="firePoint">发射点位置</param>
@@ -341,22 +416,23 @@ public class DragonController : SingletonMono<DragonController>
     public DragonJoint FindNearestUnblockedMatchingJoint(ColorType colorType, Vector3 firePoint)
     {
         // 步骤1：找到最近的目标（无射线检测）
-        List<(float, DragonJoint)> nearestJoints = FindNearestMatchingJoint(colorType, firePoint);
+        List<(float, DragonJoint)> nearestJoints = FindNearestMatchingJoints(colorType, firePoint);
         if (nearestJoints == null || nearestJoints.Count <= 0) return null;
         nearestJoints.Sort((item1, item2) => item1.Item1 < item2.Item1 ? -1 : 1);
 
+        // 获取未被遮挡的最近DragonJoint
         foreach (var nearestJointKV in nearestJoints)
         {
             var distance = nearestJointKV.Item1;
             var nearestJoint = nearestJointKV.Item2;
             Vector2 direction = (nearestJoint.transform.position - firePoint).normalized;
-
+        
             bool isHit = Physics.Raycast(firePoint, direction, out var hit, distance, LayerMask.GetMask("Game"));
             if (isHit && hit.collider != null)
             {
                 DragonJoint hitJoint = hit.collider.GetComponent<DragonJoint>();
                 // 首个碰撞就是该目标 → 未被遮挡
-                if (hitJoint == nearestJoint)
+                if (hitJoint == nearestJoint && !hitJoint.IsLockByTurret())
                 {
                     return nearestJoint;
                 }

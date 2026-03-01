@@ -18,13 +18,14 @@ namespace Gameplay
         public Action OnDeadEvent;
         public Action<int> OnUpdateHitNum;
 
-        private string _bulletName;
+        private ColorType _currentColor;
         private TurretPos _turretPos;
         private TurretInfo _turretInfo;
         private int _currentHitNum = 1;
         private float _attackTimer = 0f;
         private Tween recoilPositionTween; 
-        private Tween recoilRotationTween; 
+        private Tween recoilRotationTween;
+        private DragonJoint _targetJoint;
         
         public bool IsActive;
         public bool IsFirst;
@@ -32,14 +33,7 @@ namespace Gameplay
         private void Update()
         {
             if (!IsActive) return;
-
-            if (_attackTimer > 0)
-            {
-                _attackTimer -= Time.deltaTime;
-                return;
-            }
-
-            PerformAttack();
+            AutoAttack();
         }
 
         private void InitEntity()
@@ -47,8 +41,7 @@ namespace Gameplay
             IsFirst = _turretPos.RowIndex == 0;
             _confTurret = ConfTurret.GetConf<ConfTurret>(_turretInfo.Id);
             _currentHitNum = _turretInfo.AttackNum;
-            var confBullet = ConfBullet.GetConf<ConfBullet>(_confTurret.BulletId);
-            _bulletName = confBullet.BulletName;
+            _currentColor = _confTurret.ColorType;
             txtBullet.text = _currentHitNum.ToString();
             OnUpdateHitNum?.Invoke(_currentHitNum);
             InitializeComponents();
@@ -67,28 +60,51 @@ namespace Gameplay
             }
         }
 
-        private void PerformAttack()
+        private void AutoAttack()
         {
-            DragonJoint targetJoint = DragonController.Instance.FindNearestUnblockedMatchingJoint(_confTurret.ColorType, firePoint.position);
-            if (targetJoint != null)
+            // cd时间
+            if (_attackTimer > 0)
             {
-                AttackJoint(targetJoint);
-                _attackTimer = _confTurret.AttackCooldown;
+                _attackTimer -= Time.deltaTime;
+                return;
             }
+            
+            // 获取目标节点
+            if (_targetJoint == null || !_targetJoint.IsAlive() || !_targetJoint.IsActive())
+            {
+                _targetJoint = DragonController.Instance.FindMatchingJoint(_confTurret.ColorType);
+                if (_targetJoint == null)
+                {
+                    Debug.Log("没有获取到可攻击的目标！检测是否有待攻击的");
+                    // 没有可攻击的目标 查看所有龙骨 检测是否有待攻击的 没有该Turret作废
+                    var waitJoint = DragonController.Instance.FindMatchingNoActiveJoint(_confTurret.ColorType);
+                    if (waitJoint == null && _currentHitNum > 0)
+                    {
+                        _attackTimer = 99;
+                        Debug.Log("没有可待攻击的龙骨！ 停止攻击！");
+                    }
+                    else
+                    {
+                        _attackTimer = _confTurret.AttackCooldown;
+                    }
+                    return;
+                }
+            }
+            _attackTimer = _confTurret.AttackCooldown;
+            AttackJoint();
         }
 
-        private void AttackJoint(DragonJoint joint)
+        private void AttackJoint()
         {
-            if (joint == null) return;
-
-            Vector2 direction = (joint.transform.position - firePoint.position).normalized;
-
+            if (_targetJoint == null) return;
+            _targetJoint.SetLockByTurret(true);
+            Vector2 direction = (_targetJoint.transform.position - firePoint.position).normalized;
             PlayRecoilAnimation(direction);
             PlayMuzzleFlash();
             PlayAttackAudio();
 
             var bullet = BulletManager.Instance.InstantiateBullet(PathDefine.BulletPath, firePoint.position, Quaternion.identity) as BulletEntity;
-            bullet?.Init(_confTurret.Id, _confTurret.ColorType, direction, joint.transform.position);
+            bullet?.Init(_confTurret.Id, _confTurret.ColorType, _targetJoint);
             bullet?.AddRegister(OnBulletHitCallback);
             
             _currentHitNum--;
@@ -169,13 +185,33 @@ namespace Gameplay
 
         private void OnBulletHitCallback()
         {
-            if (_currentHitNum <= 0 && IsActive)
+            if (_currentHitNum <= 0)
             {
+                // 当前Turret没有子弹了 Joint锁定取消
                 IsActive = false;
                 float deadDuration = 0.1f;
                 PlayDeadAnimation(deadDuration);
                 Invoke(nameof(Recycle), deadDuration);
+                if (_targetJoint)
+                {
+                    _targetJoint.SetLockByTurret(false);
+                    _targetJoint = null;
+                }
             }
+            else
+            {
+                // 当前Turret还有子弹 但是Joint没有激活或者没有存活 取消锁定
+                if (_targetJoint && (!_targetJoint.IsActive() || !_targetJoint.IsAlive()))
+                {
+                    _targetJoint.SetLockByTurret(false);
+                    _targetJoint = null;
+                }
+            }
+        }
+
+        public ColorType GetColorType()
+        {
+            return _currentColor;
         }
         
         /// <summary>
@@ -201,6 +237,8 @@ namespace Gameplay
         {
             _turretInfo = (TurretInfo)parameters[0];
             _turretPos = (TurretPos)parameters[1];
+            gameObject.name = $"Turret_{_turretPos.RowIndex}x{_turretPos.ColIndex}_{(ColorType)_turretInfo.Type}";
+            // 延迟初始化是由于前排的炮台还没有移动完
             if (parameters.Length == 3)
             {
                 var delay = (float)(parameters[2]);

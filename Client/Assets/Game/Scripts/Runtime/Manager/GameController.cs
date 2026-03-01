@@ -2,6 +2,7 @@ using System;
 using Framework.UIFramework;
 using GameUI;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Gameplay
 {
@@ -19,7 +20,7 @@ namespace Gameplay
         [Header("Game Settings")]
         [SerializeField] private DragonController dragonController;
         [SerializeField] private TurretHandler turretsHandler;
-
+        
         public GameState CurrentState { get; private set; }
         public float GameTime { get; private set; }
         public int Score { get; private set; }
@@ -27,16 +28,36 @@ namespace Gameplay
         public event Action<bool> OnGameEnd;
         public event Action<int> OnScoreChanged;
         public event Action<float> OnGameTimeChanged;
+        public event Action<int> OnGameCountdown;
+        
+        private int _GameCountdown = 5;
+        private float _timer = 0f;
 
         private void Start()
         {
             InitializeGame();
-            RestartGame();
+            PrepareGame();
         }
 
         private void Update()
         {
-            if (CurrentState == GameState.Playing)
+            if (CurrentState == GameState.Preparing)
+            {
+                // 倒计时逻辑
+                _timer += Time.deltaTime;
+                if (_timer >= 1f)
+                {
+                    _timer -= 1f;
+                    _GameCountdown--;
+                    OnGameCountdown?.Invoke(_GameCountdown);
+                    
+                    if (_GameCountdown <= 0)
+                    {
+                        StartGame();
+                    }
+                }
+            }
+            else if (CurrentState == GameState.Playing)
             {
                 GameTime += Time.deltaTime;
                 OnGameTimeChanged?.Invoke(GameTime);
@@ -77,36 +98,30 @@ namespace Gameplay
             CurrentState = GameState.Preparing;
             Score = 0;
             GameTime = 0f;
-            
-            if (dragonController != null)
-            {
-                dragonController.ResetDragon();
-                dragonController.StartMoving();
-            }
-
-            if (turretsHandler != null)
-            {
-                turretsHandler.ClearTurret();
-                turretsHandler.InitTurret();
-            }
-            
-            Debug.Log("[GameController] Game Prepared");
-        }
-
-        public void StartGame()
-        {
-            CurrentState = GameState.Playing;
+            _GameCountdown = 5; // 重置倒计时
+            _timer = 0f;        // 重置计时器
 
             if (dragonController != null)
             {
                 dragonController.InitDragon();
                 dragonController.StartMoving();
             }
+            if (turretsHandler != null)
+            {
+                turretsHandler.ClearTurret();
+                turretsHandler.InitTurret();
+            }
 
             // 游戏主界面
             UIManager.Open<UIGameMainPanel>();
+            OnGameCountdown?.Invoke(_GameCountdown); // 刷新初始倒计时UI
+            Debug.Log("游戏状态：" + CurrentState);
+        }
 
-            Debug.Log("[GameController] Game Started");
+        public void StartGame()
+        {
+            CurrentState = GameState.Playing;
+            Debug.Log("游戏状态：" + CurrentState);
         }
 
         public void PauseGame()
@@ -119,8 +134,8 @@ namespace Gameplay
             {
                 dragonController.StopMoving();
             }
-
-            Debug.Log("[GameController] Game Paused");
+            
+            Debug.Log("游戏状态：" + CurrentState);
         }
 
         public void ResumeGame()
@@ -134,7 +149,7 @@ namespace Gameplay
                 dragonController.StartMoving();
             }
 
-            Debug.Log("[GameController] Game Resumed");
+            Debug.Log("游戏状态：" + CurrentState);
         }
 
         public void EndGame(bool win)
@@ -146,15 +161,7 @@ namespace Gameplay
             }
             
             OnGameEnd?.Invoke(win);
-            Debug.Log($"[GameController] Game End - Win: {win}");
-        }
-
-        public void RestartGame()
-        {
-            PrepareGame();
-            StartGame();
-
-            Debug.Log("[GameController] Game Restarted");
+            Debug.Log("游戏状态：" + CurrentState);
         }
 
         public void QuitGame()

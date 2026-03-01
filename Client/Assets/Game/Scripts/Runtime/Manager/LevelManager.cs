@@ -22,12 +22,12 @@ namespace Gameplay
         {
             _LevelID++;
             OnLevelChange?.Invoke(_LevelID);
-            GameController.Instance.RestartGame();
+            GameController.Instance.PrepareGame();
         }
 
         public void RestartLevel()
         {
-            GameController.Instance.RestartGame();
+            GameController.Instance.PrepareGame();
         }
         
         public void StopGame()

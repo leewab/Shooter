@@ -1,15 +1,13 @@
-﻿using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 using DG.Tweening;
 using GameConfig;
-using UnityEditor;
 
 namespace Gameplay
 {
     public class TurretsGrid : MonoBehaviour
     {
         private Vector2 _StartPostion;
-        private Vector2 _Space = new Vector2(20, 20);
+        private Vector2 _Space = new Vector2(15, 18);
         private TurretEntity[,] _TurretEntitiesMap;
 
         public void InitializeTurrets(TurretInfo[,] turretGrid)
@@ -65,7 +63,6 @@ namespace Gameplay
                     // Debug.LogError($"当前位置{i},{removeCol},补充name:{turretEntity.gameObject.name}");
                     turretEntity.transform.DOKill();
                     turretEntity.transform.DOMove(targetPos, 0.2f).SetEase(Ease.OutBack);
-                    turretEntity.gameObject.name = $"Turret_{i}_{removeCol}|{(ColorType)turretData.Type}";
                     turretEntity.Init(turretData, new TurretPos(i, removeCol), 0.3f);
                     turretEntitiesMap[i, removeCol] = turretEntity;
                     turretEntitiesMap[i + 1, removeCol] = null; // 清空原位置

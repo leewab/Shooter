@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Gameplay;
 using UnityEngine;
 
@@ -55,9 +56,6 @@ public class TurretHandler : SingletonMono<TurretHandler>
         _turretsGrid.InitializeTurrets(_turretInfoMatrix);
     }
 
-    private static int SetupTurretNum = 0;
-    private static int GenerateTurretNum = 0;
-    
     /// <summary>
     /// 点击消除指定炮台（核心消除算法）
     /// </summary>
@@ -65,7 +63,6 @@ public class TurretHandler : SingletonMono<TurretHandler>
     /// <returns>是否消除成功</returns>
     public void EliminateTurret(int removeRow, int removeCol)
     {
-        SetupTurretNum++;
         int rowLength = _turretInfoMatrix.GetLength(0);
         int colLength = _turretInfoMatrix.GetLength(1);
 
@@ -84,7 +81,6 @@ public class TurretHandler : SingletonMono<TurretHandler>
             }
             else
             {
-                GenerateTurretNum++;
                 // 生成新的Turret
                 var turretInfo = TurretMatrixManager.Instance.GetTurretInfo();
                 _turretInfoMatrix[i, removeCol] = turretInfo;
@@ -178,8 +174,31 @@ public class TurretHandler : SingletonMono<TurretHandler>
             if (!_turretSeatList[i].IsOccupy && _turretSeatList[i].IsActive) return _turretSeatList[i];
         }
         
-        Debug.LogError("炮台已经满了");
+        // Debug.LogError("炮台已经满了");
         return null;
+    }
+
+    public bool HasValidTurretSeat(List<DragonJoint> dragonBones)
+    {
+        // var turretSeat = GetTurretSeat();
+        // if (turretSeat == null)
+        // {
+        //     foreach (var dragonJoint in dragonBones)
+        //     {
+        //         if (dragonJoint.IsBody())
+        //         {
+        //             var colorType = dragonJoint.GetColorType();
+        //             foreach (var seat in _turretSeatList)
+        //             {
+        //                 if (seat.GetSeatColorType() == colorType) return true;
+        //             }
+        //         }
+        //     }
+        //     
+        //     return false;
+        // }
+
+        return true;
     }
     
 }

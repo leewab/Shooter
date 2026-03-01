@@ -86,7 +86,6 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
                 GameObject newObj = Object.Instantiate(prefab, position, rotation, parent);
                 targetObj = newObj.GetOrAddComponent<T>();
                 targetObj.PrefabPath = prefabPath;
-                newObj.name = $"{prefab.name}_Pooled";
                 newObj.transform.SetParent(parent);
                 newObj.transform.position = position;
                 newObj.transform.rotation = rotation;
@@ -141,6 +140,7 @@ public class GameObjectPool<T> : Singleton<GameObjectPool<T>> where T : PoolMono
             objTransform.position = Vector3.zero;
             objTransform.rotation = Quaternion.identity;
             obj.gameObject.SetActive(false);   // 隐藏对象
+            obj.name = $"{typeof(T).Name}_Pooled";
             objectQueue.Enqueue(obj);    // 加入缓存队列
         }
         return true;

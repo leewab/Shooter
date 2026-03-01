@@ -1,4 +1,5 @@
-﻿using Game.Core;
+﻿using DG.Tweening.Plugins.Core.PathCore;
+using Game.Core;
 using GameConfig;
 using ResKit;
 using UnityEngine;
@@ -8,23 +9,47 @@ namespace Gameplay
     public class DragonManager : Singleton<DragonManager>
     {
         
-        public DragonJoint GenerateBone(int id, int index)
+        public DragonJoint GenerateBone(int id, int index, DragonJointType type, Transform parent)
         {
-            var confDragonJoint = ConfDragonJoint.GetConf<ConfDragonJoint>(id);
-            var bonePrefab = ResourceManager.Instance.Load<GameObject>(confDragonJoint.Prefab);
-            var boneGameObject = GameObject.Instantiate(bonePrefab);
-            if (boneGameObject != null)
+            if (type == DragonJointType.Body)
             {
-                var joint = boneGameObject.GetOrAddComponent<DragonJoint>();
-                joint.InitDragonJoint(new DragonJointData()
+                var confDragonJoint = ConfDragonJoint.GetConf<ConfDragonJoint>(id);
+                var bonePrefab = ResourceManager.Instance.Load<GameObject>(confDragonJoint.Prefab);
+                var boneGameObject = GameObject.Instantiate(bonePrefab, parent);
+                if (boneGameObject != null)
                 {
-                    JointType = DragonJointType.Body,
-                    ColorType = (ColorType)confDragonJoint.Type,
-                    JointHealth = confDragonJoint.Health,
-                    JointIndex = index,
-                    JointId = id
-                });
-                return joint;
+                    boneGameObject.name = $"DragonBone_{index}";
+                    var joint = boneGameObject.GetOrAddComponent<DragonJoint>();
+                    joint.InitDragonJoint(new DragonJointData()
+                    {
+                        JointType = type,
+                        ColorType = (ColorType)confDragonJoint.Type,
+                        JointHealth = confDragonJoint.Health,
+                        JointIndex = index,
+                        JointId = id
+                    });
+                    return joint;
+                } 
+            }
+            else
+            {
+                var prefabName = type == DragonJointType.Head ? PathDefine.DragonHeadPath : PathDefine.DragonTailPath;
+                var bonePrefab = ResourceManager.Instance.Load<GameObject>(prefabName);
+                var boneGameObject = GameObject.Instantiate(bonePrefab, parent);
+                if (boneGameObject != null)
+                {
+                    boneGameObject.name = prefabName;
+                    var joint = boneGameObject.GetOrAddComponent<DragonJoint>();
+                    joint.InitDragonJoint(new DragonJointData()
+                    {
+                        JointType = type,
+                        ColorType = ColorType.None,
+                        JointHealth = 0,
+                        JointIndex = index,
+                        JointId = id
+                    });
+                    return joint;
+                } 
             }
 
             Debug.LogError("未加载到DragonJoint");

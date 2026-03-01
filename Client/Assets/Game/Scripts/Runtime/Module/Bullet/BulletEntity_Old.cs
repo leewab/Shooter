@@ -5,7 +5,7 @@ using GameConfig;
 
 namespace Gameplay
 {
-    public class BulletEntity : BaseBullet
+    public class BulletEntity_Old : BaseBullet
     {
         private ConfBullet _confBulletConfig;
         private ColorType _bulletColor;
@@ -13,89 +13,69 @@ namespace Gameplay
         [SerializeField] private SpriteRenderer spriteRenderer;
 
         // 私有变量
+        private Vector2 _moveDirection; // 固定的移动方向
+        private Vector2 _startPosition; // 发射起始位置
+        private Rigidbody rb;
+        private LayerMask obstacleLayer;
+        private LayerMask targetLayer;
+        private bool _isStart = false;
         private bool _isActive = false;
-        private float _scaleRatio = 1;
-        private int _scaleFrame = 3;
-        private Tween scaleTween;    // 缩放动画 Tween
+        private Tween scaleTween; // 缩放动画 Tween
         private Action _OnHitCallback;
         private DragonJoint _attackTarget;
 
         private void Awake()
         {
+            rb = GetComponent<Rigidbody>();
+            if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
+
+            // 设置层级
+            obstacleLayer = LayerMask.GetMask("Obstacle", "Ground", "Default");
+
             // 设置标签
             gameObject.tag = "Bullet";
+        }
+        
+        private void Update()
+        {
+            if (!_isStart) return;
+            // 检查是否超出最大飞行距离
+            float travelDistance = Vector2.Distance(_startPosition, transform.position);
+            if (travelDistance >= _confBulletConfig.MaxTravelDistance)
+            {
+                Debug.Log("远距离销毁");
+                DestroyBullet();
+            }
         }
 
         private void FixedUpdate()
         {
-            if (!_isActive || _attackTarget == null) return;
-            PlayDOMove();
-            PlayDOScale();
-            PlayDORotation();
-        }
-
-        private void PlayDORotation()
-        {
-            if (_attackTarget)
+            if (!_isStart) return;
+            // 保持直线运动
+            if (rb != null)
             {
-                var moveDirection = _attackTarget.transform.position - transform.position;
-                float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
-                transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
-            }
-        }
-
-        private void PlayDOMove()
-        {
-            if (_attackTarget == null || !_attackTarget.IsAlive())
-            {
-                // 如果目标丢失或死亡，销毁子弹
-                DestroyBullet();
-            }
-            else
-            {
-                // 朝向目标移动
-                Vector3 direction = (_attackTarget.transform.position - transform.position).normalized;
-                transform.position += direction * _confBulletConfig.Speed * Time.fixedDeltaTime;
-
-                // 距离检测作为命中判断
-                float distance = Vector3.Distance(transform.position, _attackTarget.transform.position);
-                if (distance < 5f) // 阈值可以根据实际情况调整
+                // 确保子弹保持固定方向和速度
+                if (rb.velocity.magnitude < _confBulletConfig.Speed * 0.9f)
                 {
-                    // Debug.Log("击中！");
-                    HandleHit(_attackTarget);
+                    rb.velocity = _moveDirection * _confBulletConfig.Speed;
                 }
             }
         }
-        
-        private void PlayDOScale()
-        {
-            if (_scaleFrame > 0)
-            {
-                _scaleFrame--;
-                return;
-            }
-
-            _scaleFrame = 3;
-            _scaleRatio -= 0.002f; 
-            var lastScale = transform.localScale;
-            transform.localScale = lastScale * _scaleRatio;
-        }
-        
 
         // 发射缩放动画 - 使用 DOTween
         private void PlayLaunchScaleAnimation()
         {
             // 杀死之前的 Tween（如果有）
-            // scaleTween?.Kill();
-            //
-            // // 设置初始缩放
-            // transform.localScale = Vector3.one * _confBulletConfig.StartScale;
-            //
-            // // 使用 DOTween 播放缩放动画
-            // scaleTween = transform
-            //     .DOScale(Vector3.one, _confBulletConfig.ScaleDuration)
-            //     .SetEase(Ease.OutBack) // 使用 OutBack 缓动，有弹性效果
-            //     .SetAutoKill(true);
+            scaleTween?.Kill();
+
+            // 设置初始缩放
+            transform.localScale = Vector3.one * _confBulletConfig.StartScale;
+
+            // 使用 DOTween 播放缩放动画
+            scaleTween = transform
+                .DOScale(Vector3.one, _confBulletConfig.ScaleDuration)
+                .SetEase(Ease.OutBack) // 使用 OutBack 缓动，有弹性效果
+                .SetAutoKill(true);
         }
         
         // 更新视觉效果
@@ -109,16 +89,40 @@ namespace Gameplay
             }
         }
 
-        private void HandleHit(DragonJoint joint)
+        private void OnTriggerEnter(Collider other)
         {
+            if (!_isActive) return;
+            HandleHit(other.gameObject);
+        }
+        
+        private void OnTriggerStay(Collider other)
+        {
+            if (!_isActive) return;
+            HandleHit(other.gameObject);
+        }
+
+        private void HandleHit(GameObject hitObject)
+        {
+            // 忽略子弹自身的碰撞
+            if (hitObject.CompareTag("Bullet")) return;
+
+            // 检查是否为障碍物
+            if (((1 << hitObject.layer) & obstacleLayer) != 0)
+            {
+                Debug.Log("障碍物销毁! " + hitObject.gameObject.name);
+                PlayMissEffects();
+                DestroyBullet();
+                return;
+            }
+
+            // 检查是否为龙节点
+            DragonJoint joint = hitObject.GetComponent<DragonJoint>();
             if (joint != null && joint.IsAlive())
             {
                 if (joint.GetColorType() == _bulletColor && !joint.IsHead() && !joint.IsTail())
                 {
                     // 造成伤害
                     joint.TakeDamage(_confBulletConfig.Damage);
-                    // 击中回调
-                    _OnHitCallback?.Invoke();
                     PlayHitEffects();
                     DestroyBullet();
                 }
@@ -127,6 +131,13 @@ namespace Gameplay
                     PlayMissEffects();
                     DestroyBullet();
                 }
+            }
+            // 如果击中非目标物体，也销毁子弹  忽略炮台自身的碰撞
+            else if (!hitObject.CompareTag("Turret")) 
+            {
+                Debug.Log("未击中销毁");
+                PlayMissEffects();
+                DestroyBullet();
             }
         }
 
@@ -196,13 +207,24 @@ namespace Gameplay
         private void DestroyBullet()
         {
             _isActive = false;
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.sprite = null;
-            }
+            _isStart = false;
+            if (spriteRenderer != null) spriteRenderer.enabled = false;
+
+            // 停止移动
+            if (rb != null) rb.velocity = Vector2.zero;
             
-            // 延迟销毁 等待特效音效播完
-            Invoke(nameof(RecycleBullet), 0.3f);
+            // 击中回调
+            _OnHitCallback?.Invoke();
+
+            // // 等待音效播放完毕再销毁
+            // if (audioSource != null && audioSource.isPlaying)
+            // {
+            //     Invoke("ActuallyDestroy", audioSource.clip.length);
+            // }
+            // else
+            {
+                Invoke(nameof(RecycleBullet), 0.1f);
+            }
         }
 
         // 实际销毁对象
@@ -214,28 +236,39 @@ namespace Gameplay
 
         private void Clear()
         {
-            scaleTween = null;
-            _attackTarget = null;
             _OnHitCallback = null;
             _confBulletConfig = null;
-            transform.localScale = Vector3.one;
+            if (rb != null) rb.velocity = Vector2.zero;  // 添加这行
         }
+        
         
         public override void Init(params object[] parameters)
         {
             int id = (int)parameters[0];
             ColorType colorType = (ColorType)parameters[1];
-            _attackTarget = (DragonJoint)parameters[2];
+            Vector2 direction =  (Vector2)parameters[2];
+            _attackTarget = (DragonJoint)parameters[3];
             _bulletColor = colorType;
             _confBulletConfig = BaseConf.GetConf<ConfBullet>(id);
+            _startPosition = this.transform.position; 
+            _moveDirection = direction.normalized;
 
-            // 更新样式
             UpdateVisuals();
             
+            // 应用初始速度
+            if (rb != null)
+            {
+                rb.velocity = _moveDirection * _confBulletConfig.Speed;
+            }
+
+            // 设置初始旋转
+            float angle = Mathf.Atan2(_moveDirection.y, _moveDirection.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
+
             // 发射缩放动画 - 使用 DOTween
-            // PlayLaunchScaleAnimation();
-                
-            transform.localScale = Vector3.one;
+            PlayLaunchScaleAnimation();
+
+            _isStart = true;
             _isActive = true;
         }
 
